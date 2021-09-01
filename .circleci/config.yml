@@ -19,7 +19,7 @@ jobs:
   build:
     docker:
       - image: cimg/go:1.16.7
-    working_directory: /go/src/github.com/skpr/cluster-metrics
+    working_directory: ~/repo
     steps:
       - checkout
       - restore_cache:
@@ -48,6 +48,7 @@ jobs:
   release:
     docker:
       - image: cimg/go:1.16.7
+    working_directory: ~/repo
     steps:
       - checkout
       - run:
