@@ -18,7 +18,7 @@ workflows:
 jobs:
   build:
     docker:
-      - image: golang:1.16
+      - image: cimg/go:1.16.7
     working_directory: /go/src/github.com/skpr/cluster-metrics
     steps:
       - checkout
@@ -47,7 +47,7 @@ jobs:
 
   release:
     docker:
-      - image: golang:1.16
+      - image: cimg/go:1.16.7
     steps:
       - checkout
       - run:
