@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/prozz/aws-embedded-metrics-golang/emf"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -45,8 +44,7 @@ func main() {
 	collector := internal.NewMetricsCollector(clientset)
 
 	// Format items
-	l := emf.New(emf.WithWriter(os.Stderr)).Namespace(namespace)
-	logger := internal.NewMetricsLogger(l)
+	logger := internal.NewMetricsLogger(os.Stderr)
 
 	for range time.Tick(frequency) {
 		// Get the pods
@@ -59,6 +57,6 @@ func main() {
 		metrics := collector.CollectMetrics(pods)
 
 		// Log the metrics.
-		logger.Log(metrics)
+		logger.Log(metrics, time.Now().UTC())
 	}
 }

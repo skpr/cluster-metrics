@@ -32,12 +32,12 @@ func TestMetricsCollector_CollectMetrics(t *testing.T) {
 
 	metrics := collector.CollectMetrics(pods)
 
-	assert.Equal(t, 3, metrics.Items["abc-def-Pending"].Count)
-	assert.Equal(t, 1, metrics.Items["abc-def-Succeeded"].Count)
-	assert.Equal(t, 1, metrics.Items["xyz-def-Succeeded"].Count)
-	assert.Equal(t, 2, metrics.Items["abc-def-Failed"].Count)
-	assert.Equal(t, 2, metrics.Items["abc-ghj-Running"].Count)
-	assert.Equal(t, 1, metrics.Items["xyz-ghj-Running"].Count)
+	assert.Equal(t, 3, metrics.Items["abc-def-Pending"].Total)
+	assert.Equal(t, 1, metrics.Items["abc-def-Succeeded"].Total)
+	assert.Equal(t, 1, metrics.Items["xyz-def-Succeeded"].Total)
+	assert.Equal(t, 2, metrics.Items["abc-def-Failed"].Total)
+	assert.Equal(t, 2, metrics.Items["abc-ghj-Running"].Total)
+	assert.Equal(t, 1, metrics.Items["xyz-ghj-Running"].Total)
 
 }
 
