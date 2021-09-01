@@ -48,12 +48,15 @@ func main() {
 	l := emf.New(emf.WithWriter(os.Stderr)).Namespace(namespace)
 	logger := internal.NewMetricsLogger(l)
 
-	for _ = range time.Tick(frequency) {
-		// Collect the metrics.
-		metrics, err := collector.Collect()
+	for range time.Tick(frequency) {
+		// Get the pods
+		pods, err := collector.ListPods()
 		if err != nil {
 			panic(err.Error())
 		}
+
+		// CollectMetrics the metrics.
+		metrics := collector.CollectMetrics(pods)
 
 		// Log the metrics.
 		logger.Log(metrics)

@@ -18,7 +18,7 @@ func NewMetricsLogger(logger *emf.Logger) *MetricsLogger {
 
 // Log ze dimensions.
 func (l *MetricsLogger) Log(metrics *MetricSet) {
-	for _, metric := range metrics.items {
+	for _, metric := range metrics.Items {
 		l.logger.DimensionSet(
 			emf.NewDimension("Kind", metric.Kind),
 			emf.NewDimension("Namespace", metric.Namespace),

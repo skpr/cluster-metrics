@@ -3,31 +3,37 @@ package internal
 import (
 	"context"
 
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-// MetricsCollector is the metrics collector.
+// MetricsCollector is ze metrics collector.
 type MetricsCollector struct {
 	clientset *kubernetes.Clientset
 }
 
-// NewMetricsCollector creates a new metrics collector.
+// NewMetricsCollector creates ze new metrics collector.
 func NewMetricsCollector(clientset *kubernetes.Clientset) *MetricsCollector {
 	return &MetricsCollector{
 		clientset: clientset,
 	}
 }
 
-// Collect ze metrics.
-func (c *MetricsCollector) Collect() (*MetricSet, error) {
-	pods, err := c.clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
+// CollectMetrics collects ze metrics.
+func (c *MetricsCollector) CollectMetrics(pods []v1.Pod) *MetricSet {
+	metrics := NewMetricSet()
+	for _, pod := range pods {
+		metrics.Increment(pod.ObjectMeta.OwnerReferences[0].Kind, pod.ObjectMeta.Namespace, pod.Status.Phase)
+	}
+	return metrics
+}
+
+// ListPods gets ze list of pods.
+func (c *MetricsCollector) ListPods() ([]v1.Pod, error) {
+	podList, err := c.clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		return &MetricSet{}, err
+		return []v1.Pod{}, err
 	}
-	metrics := &MetricSet{}
-	for _, pod := range pods.Items {
-		metrics.Increment(pod.OwnerReferences[0].Kind, pod.ObjectMeta.Namespace, pod.Status.Phase)
-	}
-	return metrics, nil
+	return podList.Items, nil
 }

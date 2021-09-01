@@ -8,7 +8,14 @@ import (
 
 // MetricSet is the metric set.
 type MetricSet struct {
-	items map[string]*Metric
+	Items map[string]*Metric
+}
+
+// NewMetricSet creates a new metric set.
+func NewMetricSet() *MetricSet {
+	return &MetricSet{
+		Items: make(map[string]*Metric),
+	}
 }
 
 // Metric represents an individual metric.
@@ -22,7 +29,7 @@ type Metric struct {
 // Increment the metric.
 func (s *MetricSet) Increment(kind, namespace string, phase corev1.PodPhase) {
 	key := fmt.Sprintf("%s-%s-%s", kind, namespace, phase)
-	if metric, found := s.items[key]; found {
+	if metric, found := s.Items[key]; found {
 		metric.Count++
 	} else {
 		metric := &Metric{
@@ -31,6 +38,6 @@ func (s *MetricSet) Increment(kind, namespace string, phase corev1.PodPhase) {
 			Phase:     phase,
 			Count:     1,
 		}
-		s.items[key] = metric
+		s.Items[key] = metric
 	}
 }
