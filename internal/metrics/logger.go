@@ -1,4 +1,4 @@
-package internal
+package metrics
 
 import (
 	"io"
@@ -7,22 +7,24 @@ import (
 	"github.com/prozz/aws-embedded-metrics-golang/emf"
 )
 
-// MetricsLogger is the metrics logger.
-type MetricsLogger struct {
+// Logger is the metrics logger.
+type Logger struct {
 	writer    io.Writer
+	namespace string
 }
 
-// NewMetricsLogger creates a new metrics logger.
-func NewMetricsLogger(writer io.Writer) *MetricsLogger {
-	return &MetricsLogger{
+// NewLogger creates a new metrics logger.
+func NewLogger(writer io.Writer, namespace string) *Logger {
+	return &Logger{
 		writer:    writer,
+		namespace: namespace,
 	}
 }
 
 // Log ze dimensions.
-func (l *MetricsLogger) Log(metrics *MetricSet, timestamp time.Time) {
+func (l *Logger) Log(metrics *MetricSet, timestamp time.Time) {
 	for _, metric := range metrics.Items {
-		logger := emf.New(emf.WithWriter(l.writer), emf.WithTimestamp(timestamp))
+		logger := emf.New(emf.WithWriter(l.writer), emf.WithTimestamp(timestamp)).Namespace(l.namespace)
 		logger.DimensionSet(
 			emf.NewDimension("Kind", metric.Kind),
 			emf.NewDimension("Namespace", metric.Namespace),

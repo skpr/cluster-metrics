@@ -19,7 +19,7 @@ fmt:
 
 # Run tests with coverage reporting.
 test:
-	go test -cover ./...
+	gotestsum -- -coverprofile=cover.out ./...
 
 build:
 	GOOS=linux go build -o ${OUTPUT} main.go

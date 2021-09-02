@@ -2,15 +2,13 @@ package main
 
 import (
 	"os"
-	"path/filepath"
 	"time"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 
-	"github.com/skpr/cluster-metrics/internal"
+	"github.com/skpr/cluster-metrics/internal/metrics"
 )
 
 var (
@@ -20,13 +18,9 @@ var (
 )
 
 func main() {
-	defaultConfig := ""
-	if home := homedir.HomeDir(); home != "" {
-		defaultConfig = filepath.Join(home, ".kube", "config")
-	}
-	kingpin.Flag("kubeconfig", "The path to the kube config file.").Default(defaultConfig).StringVar(&kubeConfig)
+	kingpin.Flag("kubeconfig", "The path to the kube config file.").StringVar(&kubeConfig)
 	kingpin.Flag("frequency", "How often to poll for items data").Default("60s").DurationVar(&frequency)
-	kingpin.Flag("namespace", "The metrics namespace").Required().StringVar(&namespace)
+	kingpin.Flag("namespace", "The metrics namespace").Default("Skpr/ClusterMetrics").StringVar(&namespace)
 	kingpin.Parse()
 
 	// use the current context in kubeConfig
@@ -41,10 +35,10 @@ func main() {
 		panic(err.Error())
 	}
 
-	collector := internal.NewMetricsCollector(clientset)
+	collector := metrics.NewCollector(clientset)
 
 	// Format items
-	logger := internal.NewMetricsLogger(os.Stderr)
+	logger := metrics.NewLogger(os.Stderr, namespace)
 
 	for range time.Tick(frequency) {
 		// Get the pods
@@ -53,8 +47,8 @@ func main() {
 			panic(err.Error())
 		}
 
-		// CollectMetrics the metrics.
-		metrics := collector.CollectMetrics(pods)
+		// Collect the metrics.
+		metrics := collector.Collect(pods)
 
 		// Log the metrics.
 		logger.Log(metrics, time.Now().UTC())

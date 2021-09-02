@@ -1,4 +1,4 @@
-package internal
+package metrics
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 )
 
 func TestMetricsCollector_CollectMetrics(t *testing.T) {
-	collector := NewMetricsCollector(nil)
+	collector := NewCollector(nil)
 
 	vals := provideTestValues()
 
@@ -30,7 +30,7 @@ func TestMetricsCollector_CollectMetrics(t *testing.T) {
 		})
 	}
 
-	metrics := collector.CollectMetrics(pods)
+	metrics := collector.Collect(pods)
 
 	assert.Equal(t, 3, metrics.Items["abc-def-Pending"].Total)
 	assert.Equal(t, 1, metrics.Items["abc-def-Succeeded"].Total)
