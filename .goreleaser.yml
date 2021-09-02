@@ -14,7 +14,6 @@ dockers:
     build_flag_templates: [ "--pull" ]
 release:
   prerelease: auto
-  name_template: "Cluster Metrics {{.Version}}"
   github:
     owner: skpr
     name: cluster-metrics
