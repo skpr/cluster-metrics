@@ -22,16 +22,6 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - go-mod-v4-{{ checksum "go.sum" }}
-      - run:
-          name: Install Dependencies
-          command: go mod download
-      - save_cache:
-          key: go-mod-v4-{{ checksum "go.sum" }}
-          paths:
-            - "/go/pkg/mod"
       - run:
           name: Lint
           command: |
@@ -48,20 +38,10 @@ jobs:
 
   release:
     docker:
-      - image: golang:1.16.7
-    working_directory: ~/repo
+      - image: docker.io/goreleaser/goreleaser:latest
+    working_directory: /go/src/github.com/skpr/cluster-metrics
     steps:
       - checkout
-      - run:
-          name: "Install Dependencies"
-          command: |
-            apt-get update && apt-get install -y zip
-            go get github.com/tcnksm/ghr
-      - run:
-          name: "Build"
-          command: make package
-      - run:
-          name: "Publish Release on GitHub"
-          command: |
-            VERSION=$(git describe --tags --always)
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./function.zip
+      - setup_remote_docker
+      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+      - run: goreleaser

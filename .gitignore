@@ -15,3 +15,5 @@
 
 # Output of make package
 function.zip
+
+dist/
