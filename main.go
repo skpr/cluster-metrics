@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"os"
 	"time"
 
 	"gopkg.in/alecthomas/kingpin.v2"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -35,22 +38,20 @@ func main() {
 		panic(err.Error())
 	}
 
-	collector := metrics.NewCollector(clientset)
-
 	// Format items
 	logger := metrics.NewLogger(os.Stderr, namespace)
 
 	for range time.Tick(frequency) {
 		// Get the pods
-		pods, err := collector.ListPods()
+		pods, err := clientset.CoreV1().Pods(corev1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			panic(err.Error())
 		}
 
 		// Collect the metrics.
-		metrics := collector.Collect(pods)
+		mts := metrics.Collect(pods.Items)
 
 		// Log the metrics.
-		logger.Log(metrics, time.Now().UTC())
+		logger.Log(mts, time.Now().UTC())
 	}
 }

@@ -9,7 +9,7 @@ import (
 )
 
 func TestMetricsCollector_CollectMetrics(t *testing.T) {
-	collector := NewCollector(nil)
+
 
 	vals := provideTestValues()
 
@@ -30,7 +30,7 @@ func TestMetricsCollector_CollectMetrics(t *testing.T) {
 		})
 	}
 
-	metrics := collector.Collect(pods)
+	metrics := Collect(pods)
 
 	assert.Equal(t, 3, metrics.Items["abc-def-Pending"].Total)
 	assert.Equal(t, 1, metrics.Items["abc-def-Succeeded"].Total)
