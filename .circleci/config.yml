@@ -23,7 +23,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Lint
+          name: Vet
           command: |
             go vet ./...
       - run:
