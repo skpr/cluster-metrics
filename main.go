@@ -15,19 +15,16 @@ import (
 )
 
 var (
-	kubeConfig string
-	frequency  time.Duration
-	namespace  string
+	cliKubeConfig = kingpin.Flag("kubeconfig", "The path to the kube config file.").Envar("KUBECONFIG").String()
+	cliFrequency  = kingpin.Flag("frequency", "How often to poll for items data").Default("60s").Duration()
+	cliNamespace  = kingpin.Flag("namespace", "The metrics namespace").Default("Skpr/Cluster").String()
 )
 
 func main() {
-	kingpin.Flag("kubeconfig", "The path to the kube config file.").StringVar(&kubeConfig)
-	kingpin.Flag("frequency", "How often to poll for items data").Default("60s").DurationVar(&frequency)
-	kingpin.Flag("namespace", "The metrics namespace").Default("Skpr/ClusterMetrics").StringVar(&namespace)
 	kingpin.Parse()
 
 	// use the current context in kubeConfig
-	c, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
+	c, err := clientcmd.BuildConfigFromFlags("", *cliKubeConfig)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -39,9 +36,9 @@ func main() {
 	}
 
 	// Format items
-	logger := metrics.NewLogger(os.Stderr, namespace)
+	logger := metrics.NewLogger(os.Stderr, *cliNamespace)
 
-	for range time.Tick(frequency) {
+	for range time.Tick(*cliFrequency) {
 		// Get the pods
 		pods, err := clientset.CoreV1().Pods(corev1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
