@@ -41,7 +41,6 @@ func TestMetricsCollector_CollectMetrics(t *testing.T) {
 
 }
 
-
 func provideTestValues() []map[string]string {
 	vals := []map[string]string{
 		{"kind": "abc", "namespace": "def", "phase": string(corev1.PodPending)},

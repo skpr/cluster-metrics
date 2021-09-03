@@ -12,8 +12,8 @@ type MetricSet struct {
 }
 
 // NewMetricSet creates a new metric set.
-func NewMetricSet() *MetricSet {
-	return &MetricSet{
+func NewMetricSet() MetricSet {
+	return MetricSet{
 		Items: make(map[string]*Metric),
 	}
 }

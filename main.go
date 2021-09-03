@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
-	"os"
+	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"gopkg.in/alecthomas/kingpin.v2"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,12 +37,19 @@ func main() {
 		panic(err.Error())
 	}
 
-	// Format items
-	logger := metrics.NewLogger(os.Stderr, *cliNamespace)
+	cfg, err := config.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		panic(fmt.Sprintf("failed to setup client: %d", err))
+	}
+
+	cloudwatchClient := cloudwatch.NewFromConfig(cfg)
+
+	pusher := metrics.NewPusher(cloudwatchClient)
 
 	for range time.Tick(*cliFrequency) {
 		// Get the pods
-		pods, err := clientset.CoreV1().Pods(corev1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
+		ctx := context.TODO()
+		pods, err := clientset.CoreV1().Pods(corev1.NamespaceAll).List(ctx, metav1.ListOptions{})
 		if err != nil {
 			panic(err.Error())
 		}
@@ -48,7 +57,13 @@ func main() {
 		// Collect the metrics.
 		mts := metrics.Collect(pods.Items)
 
-		// Log the metrics.
-		logger.Log(mts, time.Now().UTC())
+		// Convert to metric data.
+		metricData := metrics.ConvertToMetricData(time.Now().UTC(), mts)
+
+		// Push the metrics.
+		err = pusher.Push(ctx, *cliNamespace, metricData)
+		if err != nil {
+			panic(err.Error())
+		}
 	}
 }
