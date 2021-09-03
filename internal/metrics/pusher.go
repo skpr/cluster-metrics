@@ -12,22 +12,25 @@ import (
 )
 
 const (
-	DimensionKind      = "Kind"
-	DimensionNamespace = "Namespace"
-	DimensionPhase     = "Phase"
-	MetricTotal        = "Total"
+	dimensionKind      = "Kind"
+	dimensionNamespace = "Namespace"
+	dimensionPhase     = "Phase"
+	metricTotal        = "Total"
 )
 
+// Pusher the metrics pusher.
 type Pusher struct {
 	cloudwatchClient types.CloudwatchInterface
 }
 
+// NewPusher creates a new metrics pusher.
 func NewPusher(cloudwatchClient types.CloudwatchInterface) *Pusher {
 	return &Pusher{
 		cloudwatchClient: cloudwatchClient,
 	}
 }
 
+// Push the metrics.
 func (p *Pusher) Push(ctx context.Context, namespace string, metricData []awstypes.MetricDatum) error {
 	_, err := p.cloudwatchClient.PutMetricData(ctx, &cloudwatch.PutMetricDataInput{
 		MetricData: metricData,
@@ -39,22 +42,23 @@ func (p *Pusher) Push(ctx context.Context, namespace string, metricData []awstyp
 	return nil
 }
 
+// ConvertToMetricData converts our metrics to aws metric data.
 func ConvertToMetricData(timestamp time.Time, metrics MetricSet) []awstypes.MetricDatum {
 	var data []awstypes.MetricDatum
 	for _, metric := range metrics.Items {
 		datum := awstypes.MetricDatum{
-			MetricName: aws.String(MetricTotal),
+			MetricName: aws.String(metricTotal),
 			Dimensions: []awstypes.Dimension{
 				{
-					Name:  aws.String(DimensionKind),
+					Name:  aws.String(dimensionKind),
 					Value: aws.String(metric.Kind),
 				},
 				{
-					Name:  aws.String(DimensionNamespace),
+					Name:  aws.String(dimensionNamespace),
 					Value: aws.String(metric.Namespace),
 				},
 				{
-					Name:  aws.String(DimensionPhase),
+					Name:  aws.String(dimensionPhase),
 					Value: aws.String(string(metric.Phase)),
 				},
 			},

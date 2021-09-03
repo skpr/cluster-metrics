@@ -11,6 +11,7 @@ import (
 	"github.com/skpr/cluster-metrics/internal/metrics/mock"
 )
 
+// TestPusher_Push tests the push function.
 func TestPusher_Push(t *testing.T) {
 
 	mts := NewMetricSet()
@@ -31,7 +32,7 @@ func TestPusher_Push(t *testing.T) {
 	assert.Equal(t, timestamp, *datum.Timestamp)
 	assert.Len(t, datum.Dimensions, 3)
 	assert.Greater(t, int(*datum.Value), 0)
-	assert.Equal(t, MetricTotal, *datum.MetricName)
+	assert.Equal(t, metricTotal, *datum.MetricName)
 
 	pusher := NewPusher(cloudwatch)
 	err := pusher.Push(context.TODO(), namespace, metricData)

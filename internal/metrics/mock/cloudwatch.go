@@ -13,6 +13,7 @@ type Cloudwatch struct {
 	types.CloudwatchInterface
 }
 
+// NewCloudwatch creates a new mock.
 func NewCloudwatch() types.CloudwatchInterface {
 	return &Cloudwatch{}
 }
