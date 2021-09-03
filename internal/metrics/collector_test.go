@@ -10,7 +10,6 @@ import (
 
 func TestMetricsCollector_CollectMetrics(t *testing.T) {
 
-
 	vals := provideTestValues()
 
 	pods := []corev1.Pod{}
@@ -40,7 +39,6 @@ func TestMetricsCollector_CollectMetrics(t *testing.T) {
 	assert.Equal(t, 1, metrics.Items["xyz-ghj-Running"].Total)
 
 }
-
 
 func provideTestValues() []map[string]string {
 	vals := []map[string]string{

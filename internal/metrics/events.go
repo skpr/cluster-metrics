@@ -15,6 +15,7 @@ func CreateInput(logGroup, logStream string, metrics MetricSet, sequenceToken *s
 		LogStreamName: aws.String(logStream),
 		SequenceToken: sequenceToken,
 	}
+	return input
 }
 
 func ConvertToEvents(timestamp time.Time, namespace string, metrics MetricSet) []types.InputLogEvent {
@@ -23,7 +24,9 @@ func ConvertToEvents(timestamp time.Time, namespace string, metrics MetricSet) [
 		mesg := Format(timestamp, namespace, *metric)
 		ev := types.InputLogEvent{
 			Message:   aws.String(mesg),
-			Timestamp: aws.Time(timestamp),
+			Timestamp: aws.Int64(timestamp.UnixNano() / int64(time.Millisecond)),
 		}
+		events = append(events, ev)
 	}
+	return events
 }

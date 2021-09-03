@@ -32,7 +32,7 @@ func (l CloudwatchLogs) CreateLogStream(ctx context.Context, params *cloudwatchl
 // PutLogEvents implements the interface.
 func (l CloudwatchLogs) PutLogEvents(ctx context.Context, params *cloudwatchlogs.PutLogEventsInput, optFns ...func(options *cloudwatchlogs.Options)) (*cloudwatchlogs.PutLogEventsOutput, error) {
 	out := &cloudwatchlogs.PutLogEventsOutput{
-		NextSequenceToken:     aws.String("abcd1234"),
+		NextSequenceToken: aws.String("abcd1234"),
 	}
 	return out, nil
 }

@@ -8,7 +8,7 @@ import (
 
 // MetricSet is the metric set.
 type MetricSet struct {
-	Items      map[string]*Metric
+	Items map[string]*Metric
 }
 
 // NewMetricSet creates a new metric set.
@@ -22,8 +22,8 @@ func NewMetricSet() MetricSet {
 type Metric struct {
 	Kind      string
 	Namespace string
-	Phase corev1.PodPhase
-	Total int
+	Phase     corev1.PodPhase
+	Total     int
 }
 
 // Increment the metric.
