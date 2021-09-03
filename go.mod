@@ -8,8 +8,6 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.9.0
 	github.com/aws/aws-sdk-go-v2/config v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.8.0
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.7.0
-	github.com/prozz/aws-embedded-metrics-golang v1.0.0
 	github.com/stretchr/testify v1.7.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	k8s.io/api v0.22.1
