@@ -8,7 +8,6 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.9.0
 	github.com/aws/aws-sdk-go-v2/config v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.7.0
-	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/uuid v1.3.0
 	github.com/prozz/aws-embedded-metrics-golang v1.0.0
 	github.com/stretchr/testify v1.7.0
