@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
@@ -10,7 +11,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/skpr/cluster-metrics/internal/metrics"
 )
 
@@ -18,6 +20,7 @@ var (
 	cliKubeConfig = kingpin.Flag("kubeconfig", "The path to the kube config file.").Envar("KUBECONFIG").String()
 	cliFrequency  = kingpin.Flag("frequency", "How often to poll for items data").Default("60s").Duration()
 	cliNamespace  = kingpin.Flag("namespace", "The metrics namespace").Default("Skpr/Cluster").String()
+	cliLogGroup = kingpin.Flag("log-group", "The log group to use").Envar("CLUSTER_METRICS_LOG_GROUP").String()
 )
 
 func main() {
@@ -35,8 +38,19 @@ func main() {
 		panic(err.Error())
 	}
 
-	// Format items
-	logger := metrics.NewLogger(os.Stderr, *cliNamespace)
+	cfg, err := config.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		panic(fmt.Sprintf("failed to setup client: %d", err))
+	}
+
+	cwlogsClient := cloudwatchlogs.NewFromConfig(cfg)
+
+	pusher := metrics.NewLogsPusher(cwlogsClient)
+	ctx := context.TODO()
+	err = pusher.CreateLogGroup(ctx, *cliLogGroup)
+	if err != nil {
+		panic(fmt.Sprintf("failed to create log group %s client: %d", *cliLogGroup, err))
+	}
 
 	for range time.Tick(*cliFrequency) {
 		// Get the pods

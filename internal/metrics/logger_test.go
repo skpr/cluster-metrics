@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"bytes"
 	"fmt"
 	"testing"
 	"time"
@@ -11,30 +10,32 @@ import (
 )
 
 func TestMetricsLogger_Log(t *testing.T) {
-	var buf bytes.Buffer
 
-	logger := NewLogger(&buf, "foo")
+	mts := NewMetricSet()
+	mts.Increment("ReplicaSet", "foo", corev1.PodPending)
+	mts.Increment("ReplicaSet", "foo", corev1.PodPending)
+	mts.Increment("ReplicaSet", "foo", corev1.PodRunning)
+	mts.Increment("ReplicaSet", "bar", corev1.PodPending)
+	mts.Increment("ReplicaSet", "bar", corev1.PodRunning)
 
-	metrics := NewMetricSet()
-	metrics.Increment("ReplicaSet", "foo", corev1.PodPending)
-	metrics.Increment("ReplicaSet", "foo", corev1.PodPending)
-	metrics.Increment("ReplicaSet", "foo", corev1.PodRunning)
-	metrics.Increment("ReplicaSet", "bar", corev1.PodPending)
-	metrics.Increment("ReplicaSet", "bar", corev1.PodRunning)
-
+	namespace := "Skpr/Cluster"
 	timestamp := time.Date(2020, time.September, 2, 9, 2, 0, 0, time.UTC)
-	logger.Log(metrics, timestamp)
-	s := buf.String()
-	fmt.Println(s)
+	var lines []string
+	Process(namespace, mts, timestamp, func(line string) {
+		lines = append(lines, line)
+	})
 
-	json1 := `{"Kind":"ReplicaSet","Namespace":"foo","Phase":"Pending","Total":2,"_aws":{"Timestamp":1599037320000,"CloudWatchMetrics":[{"Namespace":"foo","Dimensions":[["Kind","Namespace","Phase"]],"Metrics":[{"Name":"Total","Unit":"None"}]}]}}`
-	json2 := `{"Kind":"ReplicaSet","Namespace":"foo","Phase":"Running","Total":1,"_aws":{"Timestamp":1599037320000,"CloudWatchMetrics":[{"Namespace":"foo","Dimensions":[["Kind","Namespace","Phase"]],"Metrics":[{"Name":"Total","Unit":"None"}]}]}}`
-	json3 := `{"Kind":"ReplicaSet","Namespace":"bar","Phase":"Pending","Total":1,"_aws":{"Timestamp":1599037320000,"CloudWatchMetrics":[{"Namespace":"foo","Dimensions":[["Kind","Namespace","Phase"]],"Metrics":[{"Name":"Total","Unit":"None"}]}]}}`
-	json4 := `{"Kind":"ReplicaSet","Namespace":"bar","Phase":"Running","Total":1,"_aws":{"Timestamp":1599037320000,"CloudWatchMetrics":[{"Namespace":"foo","Dimensions":[["Kind","Namespace","Phase"]],"Metrics":[{"Name":"Total","Unit":"None"}]}]}}`
+	fmt.Println(lines)
 
-	assert.Contains(t, s, json1)
-	assert.Contains(t, s, json2)
-	assert.Contains(t, s, json3)
-	assert.Contains(t, s, json4)
+	json1 := `{"Kind":"ReplicaSet","Namespace":"bar","Phase":"Pending","Total":1,"_aws":{"Timestamp":1599037320000,"CloudWatchMetrics":[{"Namespace":"Skpr/Cluster","Dimensions":[["Kind","Namespace","Phase"]],"Metrics":[{"Name":"Total","Unit":"None"}]}]}}`
+	json2 := `{"Kind":"ReplicaSet","Namespace":"bar","Phase":"Running","Total":1,"_aws":{"Timestamp":1599037320000,"CloudWatchMetrics":[{"Namespace":"Skpr/Cluster","Dimensions":[["Kind","Namespace","Phase"]],"Metrics":[{"Name":"Total","Unit":"None"}]}]}}`
+	json3 := `{"Kind":"ReplicaSet","Namespace":"foo","Phase":"Pending","Total":2,"_aws":{"Timestamp":1599037320000,"CloudWatchMetrics":[{"Namespace":"Skpr/Cluster","Dimensions":[["Kind","Namespace","Phase"]],"Metrics":[{"Name":"Total","Unit":"None"}]}]}}`
+	json4 := `{"Kind":"ReplicaSet","Namespace":"foo","Phase":"Running","Total":1,"_aws":{"Timestamp":1599037320000,"CloudWatchMetrics":[{"Namespace":"Skpr/Cluster","Dimensions":[["Kind","Namespace","Phase"]],"Metrics":[{"Name":"Total","Unit":"None"}]}]}}`
+
+	assert.Len(t, lines, 4)
+	assert.Contains(t, lines, json3)
+	assert.Contains(t, lines, json4)
+	assert.Contains(t, lines, json1)
+	assert.Contains(t, lines, json2)
 
 }
