@@ -25,7 +25,12 @@ jobs:
       - run:
           name: Vet
           command: |
-            go vet ./...
+            make vet
+      - run:
+          name: Lint
+          command: |
+            go get -golang.org/x/lint/golint
+            make lint
       - run:
           name: Test
           command: |
