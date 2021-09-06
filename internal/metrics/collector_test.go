@@ -10,11 +10,10 @@ import (
 
 func TestMetricsCollector_CollectMetrics(t *testing.T) {
 
+	values := provideTestValues()
 
-	vals := provideTestValues()
-
-	pods := []corev1.Pod{}
-	for _, val := range vals {
+	var pods []corev1.Pod
+	for _, val := range values {
 		pods = append(pods, corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: val["namespace"],
@@ -32,15 +31,14 @@ func TestMetricsCollector_CollectMetrics(t *testing.T) {
 
 	metrics := Collect(pods)
 
-	assert.Equal(t, 3, metrics.Items["abc-def-Pending"].Total)
-	assert.Equal(t, 1, metrics.Items["abc-def-Succeeded"].Total)
-	assert.Equal(t, 1, metrics.Items["xyz-def-Succeeded"].Total)
-	assert.Equal(t, 2, metrics.Items["abc-def-Failed"].Total)
-	assert.Equal(t, 2, metrics.Items["abc-ghj-Running"].Total)
-	assert.Equal(t, 1, metrics.Items["xyz-ghj-Running"].Total)
+	assert.Equal(t, 3, metrics.Items["abc-def-Pending"].Value)
+	assert.Equal(t, 1, metrics.Items["abc-def-Succeeded"].Value)
+	assert.Equal(t, 1, metrics.Items["xyz-def-Succeeded"].Value)
+	assert.Equal(t, 2, metrics.Items["abc-def-Failed"].Value)
+	assert.Equal(t, 2, metrics.Items["abc-ghj-Running"].Value)
+	assert.Equal(t, 1, metrics.Items["xyz-ghj-Running"].Value)
 
 }
-
 
 func provideTestValues() []map[string]string {
 	vals := []map[string]string{

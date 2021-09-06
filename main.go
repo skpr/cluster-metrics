@@ -35,9 +35,6 @@ func main() {
 		panic(err.Error())
 	}
 
-	// Format items
-	logger := metrics.NewLogger(os.Stderr, *cliNamespace)
-
 	for range time.Tick(*cliFrequency) {
 		// Get the pods
 		pods, err := clientset.CoreV1().Pods(corev1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
@@ -49,6 +46,9 @@ func main() {
 		mts := metrics.Collect(pods.Items)
 
 		// Log the metrics.
-		logger.Log(mts, time.Now().UTC())
+		err = metrics.Log(os.Stdout, *cliNamespace, mts)
+		if err != nil {
+			panic(err.Error())
+		}
 	}
 }

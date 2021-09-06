@@ -17,6 +17,9 @@ lint:
 fmt:
 	go fmt ./...
 
+vet:
+	go vet ./...
+
 # Run tests with coverage reporting.
 test:
 	gotestsum -- -coverprofile=cover.out ./...
