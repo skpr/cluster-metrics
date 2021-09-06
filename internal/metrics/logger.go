@@ -1,34 +1,19 @@
 package metrics
 
 import (
+	"encoding/json"
 	"io"
-	"time"
-
-	"github.com/prozz/aws-embedded-metrics-golang/emf"
 )
 
-// Logger is the metrics logger.
-type Logger struct {
-	writer    io.Writer
-	namespace string
-}
-
-// NewLogger creates a new metrics logger.
-func NewLogger(writer io.Writer, namespace string) *Logger {
-	return &Logger{
-		writer:    writer,
-		namespace: namespace,
-	}
-}
-
-// Log ze dimensions.
-func (l *Logger) Log(metrics *MetricSet, timestamp time.Time) {
+// Log logs the metrics to the writer.
+func Log(writer io.Writer, name string, metrics *MetricSet) error {
+	encoder := json.NewEncoder(writer)
 	for _, metric := range metrics.Items {
-		logger := emf.New(emf.WithWriter(l.writer), emf.WithTimestamp(timestamp)).Namespace(l.namespace)
-		logger.DimensionSet(
-			emf.NewDimension("Kind", metric.Kind),
-			emf.NewDimension("Namespace", metric.Namespace),
-			emf.NewDimension("Phase", string(metric.Phase)),
-		).Metric("Total", metric.Total).Log()
+		metric.Name = name
+		err := encoder.Encode(&metric)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
