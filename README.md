@@ -15,3 +15,9 @@ Flags:
   --namespace="Skpr/ClusterMetrics"  
                            The metrics namespace
 ```
+
+## Building
+
+```
+goreleaser build --snapshot --rm-dist
+```

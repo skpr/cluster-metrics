@@ -22,6 +22,7 @@ func NewMetricSet() *MetricSet {
 type Metric struct {
 	Name   string            `json:"name"`
 	Value  int               `json:"value"`
+	Type   string            `json:"type"`
 	Labels map[string]string `json:"labels"`
 }
 
