@@ -34,7 +34,7 @@ jobs:
       - run:
           name: Test
           command: |
-            go install gotest.tools/gotestsum@1.7.0
+            go install gotest.tools/gotestsum@v1.7.0
             gotestsum --junitfile ${TEST_RESULTS}/gotestsum-report.xml
       - store_test_results:
           path: /tmp/test-results
