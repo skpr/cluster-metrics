@@ -29,7 +29,7 @@ jobs:
       - run:
           name: Lint
           command: |
-            go get golang.org/x/lint/golint
+            go install golang.org/x/lint/golint@latest
             make lint
       - run:
           name: Test
