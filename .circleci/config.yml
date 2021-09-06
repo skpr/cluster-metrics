@@ -19,9 +19,7 @@ jobs:
   build:
     docker:
       - image: golang:1.17
-    working_directory: ~/repo
-    environment:
-      GO111MODULE: "on"
+    working_directory: /go/src/github.com/skpr/cluster-metrics
     steps:
       - checkout
       - run:
@@ -41,7 +39,7 @@ jobs:
   release:
     docker:
       - image: docker.io/goreleaser/goreleaser:latest
-    working_directory: ~/repo
+    working_directory: /go/src/github.com/skpr/cluster-metrics
     steps:
       - checkout
       - setup_remote_docker
