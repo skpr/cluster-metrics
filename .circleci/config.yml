@@ -35,9 +35,10 @@ jobs:
           name: Test
           command: |
             go install gotest.tools/gotestsum@v1.7.0
-            gotestsum --junitfile ${TEST_RESULTS}/gotestsum-report.xml
+            mkdir -p test-results/junit
+            gotestsum --junitfile test-results/junit/junit-report.xml
       - store_test_results:
-          path: /tmp/test-results
+          path: test-results
 
   release:
     docker:
