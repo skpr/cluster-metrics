@@ -16,8 +16,7 @@ import (
 
 var (
 	cliKubeConfig = kingpin.Flag("kubeconfig", "The path to the kube config file.").Envar("KUBECONFIG").String()
-	cliFrequency  = kingpin.Flag("frequency", "How often to poll for items data").Default("60s").Duration()
-	cliNamespace  = kingpin.Flag("namespace", "The metrics namespace").Default("Skpr/Cluster").String()
+	cliFrequency  = kingpin.Flag("frequency", "How often to poll for items data").Envar("CLUSTER_METRICS_FREQUENCY").Default("60s").Duration()
 )
 
 func main() {
@@ -46,7 +45,7 @@ func main() {
 		mts := metrics.Collect(pods.Items)
 
 		// Log the metrics.
-		err = metrics.Log(os.Stdout, *cliNamespace, mts)
+		err = metrics.Log(os.Stdout, mts)
 		if err != nil {
 			panic(err.Error())
 		}
