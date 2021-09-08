@@ -29,7 +29,7 @@ func TestMetricsCollector_CollectMetrics(t *testing.T) {
 		})
 	}
 
-	metrics := Collect(pods)
+	metrics,phaseSet := Collect(pods)
 
 	assert.Equal(t, 3, metrics.Items["abc-def-Pending"].Value)
 	assert.Equal(t, 1, metrics.Items["abc-def-Succeeded"].Value)
@@ -37,6 +37,8 @@ func TestMetricsCollector_CollectMetrics(t *testing.T) {
 	assert.Equal(t, 2, metrics.Items["abc-def-Failed"].Value)
 	assert.Equal(t, 2, metrics.Items["abc-ghj-Running"].Value)
 	assert.Equal(t, 1, metrics.Items["xyz-ghj-Running"].Value)
+
+	assert.Equal(t, 3, phaseSet["Running"])
 
 }
 

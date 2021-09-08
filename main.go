@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"gopkg.in/alecthomas/kingpin.v2"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,6 +37,15 @@ func main() {
 		panic(err.Error())
 	}
 
+	cfg, err := config.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		panic(fmt.Sprintf("failed to setup client: %d", err))
+	}
+
+	cloudwatchClient := cloudwatch.NewFromConfig(cfg)
+
+	pusher := metrics.NewPusher(cloudwatchClient)
+
 	for range time.Tick(*cliFrequency) {
 		// Get the pods
 		pods, err := clientset.CoreV1().Pods(corev1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
@@ -42,12 +54,22 @@ func main() {
 		}
 
 		// Collect the metrics.
-		mts := metrics.Collect(pods.Items)
+		mts, phases := metrics.Collect(pods.Items)
 
-		// Log the metrics.
+		// Log the detailed metrics.
 		err = metrics.Log(os.Stdout, mts)
 		if err != nil {
 			panic(err.Error())
 		}
+
+		// Convert to metric data.
+		metricData := metrics.ConvertToMetricData(time.Now().UTC(), phases)
+
+		// Push the phase metrics.
+		err = pusher.Push(context.TODO(), "Skpr/Cluster", metricData)
+		if err != nil {
+			panic(err.Error())
+		}
+
 	}
 }

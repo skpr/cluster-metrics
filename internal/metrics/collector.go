@@ -5,12 +5,14 @@ import (
 )
 
 // Collect ze metrics.
-func Collect(pods []corev1.Pod) *MetricSet {
+func Collect(pods []corev1.Pod) (*MetricSet, PhaseSet) {
 	metrics := NewMetricSet()
+	phaseSet := make(PhaseSet)
 	for _, pod := range pods {
 		metrics.Increment(findOwnerKind(pod), pod.ObjectMeta.Namespace, pod.Status.Phase)
+		phaseSet[string(pod.Status.Phase)]++
 	}
-	return metrics
+	return metrics, phaseSet
 }
 
 // findOwnerKind find the owner kind.
