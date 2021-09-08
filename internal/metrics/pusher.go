@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"context"
+	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -44,8 +45,16 @@ func (p *Pusher) Push(ctx context.Context, namespace string, metricData []awstyp
 
 // ConvertToMetricData converts our metrics to aws metric data.
 func ConvertToMetricData(timestamp time.Time, phases PhaseSet) []awstypes.MetricDatum {
+
+	// Sort keys for a consistent result order.
+	keys := make([]string, 0, len(phases))
+	for k := range phases {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
 	var data []awstypes.MetricDatum
-	for phase, total := range phases {
+	for _, phase := range keys {
 		datum := awstypes.MetricDatum{
 			MetricName: aws.String(metricTotal),
 			Dimensions: []awstypes.Dimension{
@@ -55,7 +64,7 @@ func ConvertToMetricData(timestamp time.Time, phases PhaseSet) []awstypes.Metric
 				},
 			},
 			Timestamp: aws.Time(timestamp),
-			Value:     aws.Float64(float64(total)),
+			Value:     aws.Float64(float64(phases[phase])),
 		}
 		data = append(data, datum)
 	}
