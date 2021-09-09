@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	typeGauge = "gauge"
+	typeGauge  = "gauge"
 	metricName = "PodStatus"
 )
 

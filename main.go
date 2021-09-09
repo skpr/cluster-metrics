@@ -18,8 +18,8 @@ import (
 )
 
 var (
-	cliKubeConfig = kingpin.Flag("kubeconfig", "The path to the kube config file.").Envar("KUBECONFIG").String()
-	cliFrequency  = kingpin.Flag("frequency", "How often to poll for items data").Envar("CLUSTER_METRICS_FREQUENCY").Default("60s").Duration()
+	cliKubeConfig  = kingpin.Flag("kubeconfig", "The path to the kube config file.").Envar("KUBECONFIG").String()
+	cliFrequency   = kingpin.Flag("frequency", "How often to poll for items data").Envar("CLUSTER_METRICS_FREQUENCY").Default("60s").Duration()
 	cliClusterName = kingpin.Flag("cluster", "The cluster name").Envar("CLUSTER_NAME").String()
 )
 
