@@ -16,6 +16,7 @@ const (
 	dimensionKind      = "kind"
 	dimensionNamespace = "namespace"
 	dimensionPhase     = "phase"
+	dimensionCluster   = "cluster"
 	metricTotal        = "total"
 )
 
@@ -44,7 +45,7 @@ func (p *Pusher) Push(ctx context.Context, namespace string, metricData []awstyp
 }
 
 // ConvertToMetricData converts our metrics to aws metric data.
-func ConvertToMetricData(timestamp time.Time, phases PhaseSet) []awstypes.MetricDatum {
+func ConvertToMetricData(timestamp time.Time, cluster string, phases PhaseSet) []awstypes.MetricDatum {
 
 	// Sort keys for a consistent result order.
 	keys := make([]string, 0, len(phases))
@@ -61,6 +62,10 @@ func ConvertToMetricData(timestamp time.Time, phases PhaseSet) []awstypes.Metric
 				{
 					Name:  aws.String(dimensionPhase),
 					Value: aws.String(phase),
+				},
+				{
+					Name:  aws.String(dimensionCluster),
+					Value: aws.String(cluster),
 				},
 			},
 			Timestamp: aws.Time(timestamp),

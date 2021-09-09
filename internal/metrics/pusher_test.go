@@ -24,12 +24,12 @@ func TestPusher_Push(t *testing.T) {
 	timestamp := time.Date(2020, time.September, 2, 9, 2, 0, 0, time.UTC)
 
 	cloudwatch := mock.NewCloudwatch()
-
-	metricData := ConvertToMetricData(timestamp, phases)
+	cluster := "foo"
+	metricData := ConvertToMetricData(timestamp, cluster, phases)
 
 	datum1 := metricData[0]
 	assert.Equal(t, timestamp, *datum1.Timestamp)
-	assert.Len(t, datum1.Dimensions, 1)
+	assert.Len(t, datum1.Dimensions, 2)
 	assert.Equal(t, "phase", *datum1.Dimensions[0].Name)
 	assert.Equal(t, "Pending", *datum1.Dimensions[0].Value)
 	assert.Equal(t, int(*datum1.Value), 2)
@@ -37,7 +37,7 @@ func TestPusher_Push(t *testing.T) {
 
 	datum2 := metricData[1]
 	assert.Equal(t, timestamp, *datum2.Timestamp)
-	assert.Len(t, datum2.Dimensions, 1)
+	assert.Len(t, datum2.Dimensions, 2)
 	assert.Equal(t, "phase", *datum2.Dimensions[0].Name)
 	assert.Equal(t, "Running", *datum2.Dimensions[0].Value)
 	assert.Equal(t, int(*datum2.Value), 3)

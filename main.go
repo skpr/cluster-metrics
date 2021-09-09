@@ -20,6 +20,7 @@ import (
 var (
 	cliKubeConfig = kingpin.Flag("kubeconfig", "The path to the kube config file.").Envar("KUBECONFIG").String()
 	cliFrequency  = kingpin.Flag("frequency", "How often to poll for items data").Envar("CLUSTER_METRICS_FREQUENCY").Default("60s").Duration()
+	cliClusterName = kingpin.Flag("cluster", "The cluster name").Envar("CLUSTER_NAME").String()
 )
 
 func main() {
@@ -63,7 +64,7 @@ func main() {
 		}
 
 		// Convert to metric data.
-		metricData := metrics.ConvertToMetricData(time.Now().UTC(), phases)
+		metricData := metrics.ConvertToMetricData(time.Now().UTC(), *cliClusterName, phases)
 
 		// Push the phase metrics.
 		err = pusher.Push(context.TODO(), "Skpr/Cluster", metricData)
