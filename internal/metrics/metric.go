@@ -6,6 +6,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+// PhaseSet is the phase set.
+type PhaseSet map[string]int
+
 // MetricSet is the metric set.
 type MetricSet struct {
 	Items map[string]*Metric
@@ -34,9 +37,9 @@ func (s *MetricSet) Increment(kind, namespace string, phase corev1.PodPhase) {
 	} else {
 		metric := &Metric{
 			Labels: map[string]string{
-				"kind":      kind,
-				"namespace": namespace,
-				"phase":     string(phase),
+				dimensionKind:      kind,
+				dimensionNamespace: namespace,
+				dimensionPhase:     string(phase),
 			},
 			Value: 1,
 		}
