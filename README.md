@@ -1,7 +1,7 @@
 # Cluster Metrics
 
 This is a simple app to periodically query a Kubernetes cluster
-to get some metrics, and log them in AWS Embedded Metrics format.
+to get some metrics. It pushes high level pod status metrics to CloudWatch, and logs more detailed metrics to stdout.
 
 ## Usage
 
