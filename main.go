@@ -3,14 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/skpr/cluster-metrics/internal/metrics/plugins"
+	pods2 "github.com/skpr/cluster-metrics/internal/metrics/plugins/podsbyPhase"
 	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"gopkg.in/alecthomas/kingpin.v2"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -44,32 +44,39 @@ func main() {
 	}
 
 	cloudwatchClient := cloudwatch.NewFromConfig(cfg)
-
 	pusher := metrics.NewPusher(cloudwatchClient)
 
 	for range time.Tick(*cliFrequency) {
-		// Get the pods
-		pods, err := clientset.CoreV1().Pods(corev1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
-		if err != nil {
-			panic(err.Error())
+
+		// PodsByPhase Client
+		var (
+			podsByPhase pods2.Client
+		)
+
+		// Consolidate Clients so we can loop over them
+		clients := []plugins.ClusterMetricsPluginInterface{
+			podsByPhase,
 		}
 
-		// Collect the metrics.
-		mts, phases := metrics.Collect(pods.Items)
+		for _, client := range clients {
 
-		// Log the detailed metrics.
-		err = metrics.Log(os.Stdout, mts)
-		if err != nil {
-			panic(err.Error())
-		}
+			// Collect the metrics.
+			mts, _ := client.Collect(clientset)
 
-		// Convert to metric data.
-		metricData := metrics.ConvertToMetricData(time.Now().UTC(), *cliClusterName, phases)
+			// Log the detailed metrics.
+			err = client.Log(os.Stdout, mts)
+			if err != nil {
+				panic(err.Error())
+			}
 
-		// Push the phase metrics.
-		err = pusher.Push(context.TODO(), "Skpr/Cluster", metricData)
-		if err != nil {
-			panic(err.Error())
+			// Convert to metric data.
+			metricData := client.Convert(time.Now().UTC(), *cliClusterName, map[string]interface{}{})
+
+			// Push the phase metrics.
+			err = pusher.Push(context.TODO(), "Skpr/Cluster", metricData)
+			if err != nil {
+				panic(err.Error())
+			}
 		}
 
 	}

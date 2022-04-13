@@ -1,11 +1,5 @@
 package metrics
 
-import (
-	"fmt"
-
-	corev1 "k8s.io/api/core/v1"
-)
-
 // PhaseSet is the phase set.
 type PhaseSet map[string]int
 
@@ -29,20 +23,21 @@ type Metric struct {
 	Labels map[string]string `json:"labels"`
 }
 
-// Increment the metric.
-func (s *MetricSet) Increment(kind, namespace string, phase corev1.PodPhase) {
-	key := fmt.Sprintf("%s-%s-%s", kind, namespace, phase)
-	if metric, found := s.Items[key]; found {
+// IncrementSelect will selectively increment the metric based upon uuid input.
+func (s *MetricSet) IncrementSelect(kind, namespace string, uuid string, fields map[string]string) {
+	if metric, found := s.Items[uuid]; found {
 		metric.Value++
 	} else {
 		metric := &Metric{
 			Labels: map[string]string{
 				dimensionKind:      kind,
 				dimensionNamespace: namespace,
-				dimensionPhase:     string(phase),
 			},
 			Value: 1,
 		}
-		s.Items[key] = metric
+		for i, field := range fields {
+			metric.Labels[i] = field
+		}
+		s.Items[uuid] = metric
 	}
 }

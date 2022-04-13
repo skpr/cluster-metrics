@@ -6,19 +6,18 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	corev1 "k8s.io/api/core/v1"
 )
 
 func TestLog(t *testing.T) {
 	metrics := NewMetricSet()
-	metrics.Increment("ReplicaSet", "foo", corev1.PodPending)
-	metrics.Increment("ReplicaSet", "foo", corev1.PodPending)
-	metrics.Increment("ReplicaSet", "foo", corev1.PodRunning)
-	metrics.Increment("ReplicaSet", "bar", corev1.PodPending)
-	metrics.Increment("ReplicaSet", "bar", corev1.PodRunning)
-	metrics.Increment("ReplicaSet", "bar", corev1.PodRunning)
-	metrics.Increment("ReplicaSet", "bar", corev1.PodRunning)
-	metrics.Increment("ReplicaSet", "bar", corev1.PodRunning)
+	metrics.IncrementSelect("ReplicaSet", "foo", "replicaset-foo-pending", map[string]string{dimensionPhase: "Pending"})
+	metrics.IncrementSelect("ReplicaSet", "foo", "replicaset-foo-pending", map[string]string{dimensionPhase: "Pending"})
+	metrics.IncrementSelect("ReplicaSet", "foo", "replicaset-foo-running", map[string]string{dimensionPhase: "Running"})
+	metrics.IncrementSelect("ReplicaSet", "bar", "replicaset-bar-pending", map[string]string{dimensionPhase: "Pending"})
+	metrics.IncrementSelect("ReplicaSet", "bar", "replicaset-bar-running", map[string]string{dimensionPhase: "Running"})
+	metrics.IncrementSelect("ReplicaSet", "bar", "replicaset-bar-running", map[string]string{dimensionPhase: "Running"})
+	metrics.IncrementSelect("ReplicaSet", "bar", "replicaset-bar-running", map[string]string{dimensionPhase: "Running"})
+	metrics.IncrementSelect("ReplicaSet", "bar", "replicaset-bar-running", map[string]string{dimensionPhase: "Running"})
 
 	var buf bytes.Buffer
 	err := Log(&buf, metrics)

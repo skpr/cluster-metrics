@@ -30,7 +30,6 @@ func TestMetricsCollector_CollectMetrics(t *testing.T) {
 	}
 
 	metrics, phaseSet := Collect(pods)
-
 	assert.Equal(t, 3, metrics.Items["abc-def-Pending"].Value)
 	assert.Equal(t, 1, metrics.Items["abc-def-Succeeded"].Value)
 	assert.Equal(t, 1, metrics.Items["xyz-def-Succeeded"].Value)

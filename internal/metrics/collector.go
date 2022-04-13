@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"fmt"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -9,7 +10,8 @@ func Collect(pods []corev1.Pod) (*MetricSet, PhaseSet) {
 	metrics := NewMetricSet()
 	phaseSet := make(PhaseSet)
 	for _, pod := range pods {
-		metrics.Increment(findOwnerKind(pod), pod.ObjectMeta.Namespace, pod.Status.Phase)
+		kind := findOwnerKind(pod)
+		metrics.IncrementSelect(kind, pod.ObjectMeta.Namespace, fmt.Sprintf("%s-%s-%s", kind, pod.Namespace, pod.Status.Phase), map[string]string{dimensionPhase: fmt.Sprint(pod.Status.Phase)})
 		phaseSet[string(pod.Status.Phase)]++
 	}
 	return metrics, phaseSet
