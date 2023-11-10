@@ -32,21 +32,27 @@ func TestPusher_Push(t *testing.T) {
 	cluster := "foo"
 	metricData := ConvertToMetricData(timestamp, cluster, phases)
 
-	datum1 := metricData[0]
-	assert.Equal(t, timestamp, *datum1.Timestamp)
-	assert.Len(t, datum1.Dimensions, 3)
-	assert.Equal(t, "phase", *datum1.Dimensions[1].Name)
-	assert.Equal(t, "Pending", *datum1.Dimensions[1].Value)
-	assert.Equal(t, int(*datum1.Value), 2)
-	assert.Equal(t, metricTotal, *datum1.MetricName)
-
-	datum2 := metricData[1]
-	assert.Equal(t, timestamp, *datum2.Timestamp)
-	assert.Len(t, datum2.Dimensions, 3)
-	assert.Equal(t, "phase", *datum2.Dimensions[1].Name)
-	assert.Equal(t, "Running", *datum2.Dimensions[1].Value)
-	assert.Equal(t, int(*datum2.Value), 3)
-	assert.Equal(t, metricTotal, *datum2.MetricName)
+	for i, v := range metricData {
+		if *v.Dimensions[1].Value == "Pending" {
+			datum1 := metricData[i]
+			assert.Equal(t, timestamp, *datum1.Timestamp)
+			assert.Len(t, datum1.Dimensions, 3)
+			assert.Equal(t, "phase", *datum1.Dimensions[1].Name)
+			assert.Equal(t, "Pending", *datum1.Dimensions[1].Value)
+			assert.Equal(t, int(*datum1.Value), 2)
+			assert.Equal(t, metricTotal, *datum1.MetricName)
+		} else if *v.Dimensions[1].Value == "Running" {
+			datum2 := metricData[i]
+			assert.Equal(t, timestamp, *datum2.Timestamp)
+			assert.Len(t, datum2.Dimensions, 3)
+			assert.Equal(t, "phase", *datum2.Dimensions[1].Name)
+			assert.Equal(t, "Running", *datum2.Dimensions[1].Value)
+			assert.Equal(t, int(*datum2.Value), 3)
+			assert.Equal(t, metricTotal, *datum2.MetricName)
+		} else {
+			t.Fail()
+		}
+	}
 
 	pusher := NewPusher(cloudwatch)
 	err := pusher.Push(context.TODO(), namespace, metricData)
