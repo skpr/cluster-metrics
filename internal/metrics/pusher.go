@@ -56,7 +56,7 @@ func ConvertToMetricData(timestamp time.Time, cluster string, states StateSet) [
 
 	var data []awstypes.MetricDatum
 	for kind, stateData := range states {
-		for state, _ := range stateData {
+		for state := range stateData {
 			datum := awstypes.MetricDatum{
 				MetricName: aws.String(metricTotal),
 				Dimensions: []awstypes.Dimension{
