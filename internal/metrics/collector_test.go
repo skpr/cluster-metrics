@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
@@ -120,12 +121,9 @@ func TestMetricsCollector_CollectMetrics_CronJobs(t *testing.T) {
 			Spec: batchv1.CronJobSpec{},
 		}
 
-		var suspended *bool
 		if val["suspend"] == "true" {
-			*suspended = true
+			cronjob.Spec.Suspend = aws.Bool(true)
 		}
-
-		cronjob.Spec.Suspend = suspended
 
 		cronjobs = append(cronjobs, cronjob)
 	}
