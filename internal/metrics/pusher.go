@@ -15,7 +15,7 @@ import (
 const (
 	dimensionKind      = "kind"
 	dimensionNamespace = "namespace"
-	dimensionPhase     = "phase"
+	dimensionState     = "phase"
 	dimensionCluster   = "cluster"
 	metricTotal        = "total"
 )
@@ -45,33 +45,39 @@ func (p *Pusher) Push(ctx context.Context, namespace string, metricData []awstyp
 }
 
 // ConvertToMetricData converts our metrics to aws metric data.
-func ConvertToMetricData(timestamp time.Time, cluster string, phases PhaseSet) []awstypes.MetricDatum {
+func ConvertToMetricData(timestamp time.Time, cluster string, states StateSet) []awstypes.MetricDatum {
 
 	// Sort keys for a consistent result order.
-	keys := make([]string, 0, len(phases))
-	for k := range phases {
+	keys := make([]string, 0, len(states))
+	for k := range states {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
 	var data []awstypes.MetricDatum
-	for _, phase := range keys {
-		datum := awstypes.MetricDatum{
-			MetricName: aws.String(metricTotal),
-			Dimensions: []awstypes.Dimension{
-				{
-					Name:  aws.String(dimensionPhase),
-					Value: aws.String(phase),
+	for kind, stateData := range states {
+		for state, _ := range stateData {
+			datum := awstypes.MetricDatum{
+				MetricName: aws.String(metricTotal),
+				Dimensions: []awstypes.Dimension{
+					{
+						Name:  aws.String(dimensionKind),
+						Value: aws.String(kind),
+					},
+					{
+						Name:  aws.String(dimensionState),
+						Value: aws.String(state),
+					},
+					{
+						Name:  aws.String(dimensionCluster),
+						Value: aws.String(cluster),
+					},
 				},
-				{
-					Name:  aws.String(dimensionCluster),
-					Value: aws.String(cluster),
-				},
-			},
-			Timestamp: aws.Time(timestamp),
-			Value:     aws.Float64(float64(phases[phase])),
+				Timestamp: aws.Time(timestamp),
+				Value:     aws.Float64(float64(states[kind][state])),
+			}
+			data = append(data, datum)
 		}
-		data = append(data, datum)
 	}
 	return data
 }

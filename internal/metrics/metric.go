@@ -6,8 +6,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// PhaseSet is the phase set.
-type PhaseSet map[string]int
+// StateSet is the state of the metrics.
+// ie Pod Phase, Deployment Status or CronJob Suspended state.
+type StateSet map[string]map[string]int
 
 // MetricSet is the metric set.
 type MetricSet struct {
@@ -39,7 +40,7 @@ func (s *MetricSet) Increment(kind, namespace string, phase corev1.PodPhase) {
 			Labels: map[string]string{
 				dimensionKind:      kind,
 				dimensionNamespace: namespace,
-				dimensionPhase:     string(phase),
+				dimensionState:     string(phase),
 			},
 			Value: 1,
 		}

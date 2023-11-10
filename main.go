@@ -48,14 +48,99 @@ func main() {
 	pusher := metrics.NewPusher(cloudwatchClient)
 
 	for range time.Tick(*cliFrequency) {
-		// Get the pods
-		pods, err := clientset.CoreV1().Pods(corev1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
+
+		mts, phases := &metrics.MetricSet{}, metrics.StateSet{}
+
+		{
+			// Get the pods
+			pods, err := clientset.CoreV1().Pods(corev1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
+			if err != nil {
+				panic(err.Error())
+			}
+
+			// Collect the metrics.
+			metricSetAddition, stateSetAddition := metrics.CollectPods(pods.Items)
+
+			for _, v := range metricSetAddition.Items {
+				mts.Items[v.Name] = v
+			}
+			for i, v := range stateSetAddition {
+				phases[i] = v
+			}
+		}
+
+		// Get Namespaces so we can loop through them all.
+		namespaces, err := clientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			panic(err.Error())
 		}
 
-		// Collect the metrics.
-		mts, phases := metrics.Collect(pods.Items)
+		for _, namespace := range namespaces.Items {
+			{
+				// Get the deployments
+				deployments, err := clientset.AppsV1().Deployments(namespace.Name).List(context.TODO(), metav1.ListOptions{})
+				if err != nil {
+					panic(err.Error())
+				}
+
+				// Collect the metrics.
+				metricSetAddition, stateSetAddition := metrics.CollectDeployments(deployments.Items)
+				for _, v := range metricSetAddition.Items {
+					mts.Items[v.Name] = v
+				}
+				for i, v := range stateSetAddition {
+					phases[i] = v
+				}
+			}
+			{
+				// Get the statefulsets
+				statefulsets, err := clientset.AppsV1().StatefulSets(namespace.Name).List(context.TODO(), metav1.ListOptions{})
+				if err != nil {
+					panic(err.Error())
+				}
+
+				// Collect the metrics.
+				metricSetAddition, stateSetAddition := metrics.CollectStatefulSets(statefulsets.Items)
+				for _, v := range metricSetAddition.Items {
+					mts.Items[v.Name] = v
+				}
+				for i, v := range stateSetAddition {
+					phases[i] = v
+				}
+			}
+			{
+				// Get the cronjobs
+				cronjobs, err := clientset.BatchV1().CronJobs(namespace.Name).List(context.TODO(), metav1.ListOptions{})
+				if err != nil {
+					panic(err.Error())
+				}
+
+				// Collect the metrics.
+				metricSetAddition, stateSetAddition := metrics.CollectCronJobs(cronjobs.Items)
+				for _, v := range metricSetAddition.Items {
+					mts.Items[v.Name] = v
+				}
+				for i, v := range stateSetAddition {
+					phases[i] = v
+				}
+			}
+			{
+				// Get the jobs
+				jobs, err := clientset.BatchV1().Jobs(namespace.Name).List(context.TODO(), metav1.ListOptions{})
+				if err != nil {
+					panic(err.Error())
+				}
+
+				// Collect the metrics.
+				metricSetAddition, stateSetAddition := metrics.CollectJobs(jobs.Items)
+				for _, v := range metricSetAddition.Items {
+					mts.Items[v.Name] = v
+				}
+				for i, v := range stateSetAddition {
+					phases[i] = v
+				}
+			}
+		}
 
 		// Log the detailed metrics.
 		err = metrics.Log(os.Stdout, mts)
