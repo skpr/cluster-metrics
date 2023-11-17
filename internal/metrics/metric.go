@@ -18,7 +18,7 @@ type MetricSet struct {
 // NewMetricSet creates a new metric set.
 func NewMetricSet() *MetricSet {
 	return &MetricSet{
-		Items: make(map[string]*Metric),
+		Items: map[string]*Metric{},
 	}
 }
 
@@ -37,13 +37,34 @@ func (s *MetricSet) Increment(kind, namespace string, phase corev1.PodPhase) {
 		metric.Value++
 	} else {
 		metric := &Metric{
+			Name:  key,
+			Value: 1,
 			Labels: map[string]string{
 				dimensionKind:      kind,
 				dimensionNamespace: namespace,
 				dimensionState:     string(phase),
 			},
-			Value: 1,
 		}
 		s.Items[key] = metric
 	}
+}
+
+// CombineRecords will combine two metric sets.
+func CombineRecords(recordsInput *MetricSet, recordsAppend *MetricSet) *MetricSet {
+
+	output := NewMetricSet()
+
+	for _, record := range recordsInput.Items {
+		output.Items[record.Name] = record
+	}
+
+	for _, record := range recordsAppend.Items {
+		if output.Items[record.Name] == nil {
+			output.Items[record.Name] = record
+		} else {
+			output.Items[record.Name].Value++
+		}
+	}
+
+	return output
 }

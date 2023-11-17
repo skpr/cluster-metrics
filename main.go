@@ -60,12 +60,8 @@ func main() {
 
 			// Collect the metrics.
 			metricSetAddition, stateSetAddition := metrics.CollectPods(pods.Items)
+			mts = metrics.CombineRecords(mts, metricSetAddition)
 
-			for _, v := range metricSetAddition.Items {
-				if mts.Items[v.Name] == nil {
-					mts.Items[v.Name] = v
-				}
-			}
 			for i, v := range stateSetAddition {
 				phases[i] = v
 			}
@@ -87,17 +83,14 @@ func main() {
 
 				// Collect the metrics.
 				metricSetAddition, stateSetAddition := metrics.CollectDeployments(deployments.Items)
-				for _, v := range metricSetAddition.Items {
-					if mts.Items[v.Name] == nil {
-						mts.Items[v.Name] = v
-					}
-				}
+				mts = metrics.CombineRecords(mts, metricSetAddition)
+
 				for i, v := range stateSetAddition {
 					phases[i] = v
 				}
 			}
 			{
-				// Get the statefulsets
+				// Get the statefulSets
 				statefulsets, err := clientset.AppsV1().StatefulSets(namespace.Name).List(context.TODO(), metav1.ListOptions{})
 				if err != nil {
 					panic(err.Error())
@@ -105,11 +98,8 @@ func main() {
 
 				// Collect the metrics.
 				metricSetAddition, stateSetAddition := metrics.CollectStatefulSets(statefulsets.Items)
-				for _, v := range metricSetAddition.Items {
-					if mts.Items[v.Name] == nil {
-						mts.Items[v.Name] = v
-					}
-				}
+				mts = metrics.CombineRecords(mts, metricSetAddition)
+
 				for i, v := range stateSetAddition {
 					phases[i] = v
 				}
@@ -123,11 +113,8 @@ func main() {
 
 				// Collect the metrics.
 				metricSetAddition, stateSetAddition := metrics.CollectCronJobs(cronjobs.Items)
-				for _, v := range metricSetAddition.Items {
-					if mts.Items[v.Name] == nil {
-						mts.Items[v.Name] = v
-					}
-				}
+				mts = metrics.CombineRecords(mts, metricSetAddition)
+
 				for i, v := range stateSetAddition {
 					phases[i] = v
 				}
@@ -141,11 +128,8 @@ func main() {
 
 				// Collect the metrics.
 				metricSetAddition, stateSetAddition := metrics.CollectJobs(jobs.Items)
-				for _, v := range metricSetAddition.Items {
-					if mts.Items[v.Name] == nil {
-						mts.Items[v.Name] = v
-					}
-				}
+				mts = metrics.CombineRecords(mts, metricSetAddition)
+
 				for i, v := range stateSetAddition {
 					phases[i] = v
 				}
