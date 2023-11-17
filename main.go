@@ -61,10 +61,7 @@ func main() {
 			// Collect the metrics.
 			metricSetAddition, stateSetAddition := metrics.CollectPods(pods.Items)
 			mts = metrics.CombineRecords(mts, metricSetAddition)
-
-			for i, v := range stateSetAddition {
-				phases[i] = v
-			}
+			phases = metrics.CombineStates(&phases, &stateSetAddition)
 		}
 
 		// Get Namespaces so we can loop through them all.
@@ -84,10 +81,7 @@ func main() {
 				// Collect the metrics.
 				metricSetAddition, stateSetAddition := metrics.CollectDeployments(deployments.Items)
 				mts = metrics.CombineRecords(mts, metricSetAddition)
-
-				for i, v := range stateSetAddition {
-					phases[i] = v
-				}
+				phases = metrics.CombineStates(&phases, &stateSetAddition)
 			}
 			{
 				// Get the statefulSets
@@ -99,10 +93,7 @@ func main() {
 				// Collect the metrics.
 				metricSetAddition, stateSetAddition := metrics.CollectStatefulSets(statefulsets.Items)
 				mts = metrics.CombineRecords(mts, metricSetAddition)
-
-				for i, v := range stateSetAddition {
-					phases[i] = v
-				}
+				phases = metrics.CombineStates(&phases, &stateSetAddition)
 			}
 			{
 				// Get the cronjobs
@@ -114,10 +105,7 @@ func main() {
 				// Collect the metrics.
 				metricSetAddition, stateSetAddition := metrics.CollectCronJobs(cronjobs.Items)
 				mts = metrics.CombineRecords(mts, metricSetAddition)
-
-				for i, v := range stateSetAddition {
-					phases[i] = v
-				}
+				phases = metrics.CombineStates(&phases, &stateSetAddition)
 			}
 			{
 				// Get the jobs
@@ -129,10 +117,7 @@ func main() {
 				// Collect the metrics.
 				metricSetAddition, stateSetAddition := metrics.CollectJobs(jobs.Items)
 				mts = metrics.CombineRecords(mts, metricSetAddition)
-
-				for i, v := range stateSetAddition {
-					phases[i] = v
-				}
+				phases = metrics.CombineStates(&phases, &stateSetAddition)
 			}
 		}
 

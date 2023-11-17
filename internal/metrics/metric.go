@@ -70,7 +70,7 @@ func CombineRecords(recordsInput *MetricSet, recordsAppend *MetricSet) *MetricSe
 }
 
 // CombineStates will combine two state sets.
-func CombineStates(input *StateSet, og *StateSet) *StateSet {
+func CombineStates(input *StateSet, og *StateSet) StateSet {
 	output := StateSet{}
 
 	for i, v := range *input {
@@ -100,5 +100,5 @@ func CombineStates(input *StateSet, og *StateSet) *StateSet {
 		}
 	}
 
-	return &output
+	return output
 }

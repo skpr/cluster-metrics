@@ -129,7 +129,7 @@ func TestCombineStates(t *testing.T) {
 	}
 
 	three := CombineStates(one, two)
-	for x, y := range *three {
+	for x, y := range three {
 		switch x {
 		case "Pod":
 			assert.Equal(t, y["y"], 1)
