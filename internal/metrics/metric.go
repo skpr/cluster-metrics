@@ -68,3 +68,28 @@ func CombineRecords(recordsInput *MetricSet, recordsAppend *MetricSet) *MetricSe
 
 	return output
 }
+
+func CombineStates(input *StateSet, og *StateSet) *StateSet {
+	output := StateSet{}
+
+	for i, v := range *input {
+		for a, b := range v {
+			if output[i] == nil {
+				output[i] = make(map[string]int)
+			}
+			output[i][a] = b
+		}
+
+	}
+
+	for i, v := range *og {
+		for a, b := range v {
+			if output[i] == nil {
+				output[i] = make(map[string]int)
+			}
+			output[i][a] = b
+		}
+	}
+
+	return &output
+}

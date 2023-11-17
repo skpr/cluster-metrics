@@ -104,3 +104,30 @@ func TestCombineRecords(t *testing.T) {
 
 	assert.Equal(t, len(expectedOutput.Items), len(output.Items))
 }
+
+func TestCombineStates(t *testing.T) {
+
+	one := &StateSet{
+		"Pod": {
+			"y": 1,
+		},
+		"PretendObject": {
+			"c": 3,
+		},
+		"Deployment": {
+			"b": 1,
+		},
+	}
+
+	two := &StateSet{
+		"Deployment": {
+			"b": 2,
+		},
+		"OtherPretendObject": {
+			"c": 3,
+		},
+	}
+
+	three := CombineStates(one, two)
+	fmt.Sprint(three)
+}
