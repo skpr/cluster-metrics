@@ -62,7 +62,9 @@ func main() {
 			metricSetAddition, stateSetAddition := metrics.CollectPods(pods.Items)
 
 			for _, v := range metricSetAddition.Items {
-				mts.Items[v.Name] = v
+				if mts.Items[v.Name] == nil {
+					mts.Items[v.Name] = v
+				}
 			}
 			for i, v := range stateSetAddition {
 				phases[i] = v
@@ -86,7 +88,9 @@ func main() {
 				// Collect the metrics.
 				metricSetAddition, stateSetAddition := metrics.CollectDeployments(deployments.Items)
 				for _, v := range metricSetAddition.Items {
-					mts.Items[v.Name] = v
+					if mts.Items[v.Name] == nil {
+						mts.Items[v.Name] = v
+					}
 				}
 				for i, v := range stateSetAddition {
 					phases[i] = v
@@ -102,7 +106,9 @@ func main() {
 				// Collect the metrics.
 				metricSetAddition, stateSetAddition := metrics.CollectStatefulSets(statefulsets.Items)
 				for _, v := range metricSetAddition.Items {
-					mts.Items[v.Name] = v
+					if mts.Items[v.Name] == nil {
+						mts.Items[v.Name] = v
+					}
 				}
 				for i, v := range stateSetAddition {
 					phases[i] = v
@@ -118,7 +124,9 @@ func main() {
 				// Collect the metrics.
 				metricSetAddition, stateSetAddition := metrics.CollectCronJobs(cronjobs.Items)
 				for _, v := range metricSetAddition.Items {
-					mts.Items[v.Name] = v
+					if mts.Items[v.Name] == nil {
+						mts.Items[v.Name] = v
+					}
 				}
 				for i, v := range stateSetAddition {
 					phases[i] = v
@@ -134,7 +142,9 @@ func main() {
 				// Collect the metrics.
 				metricSetAddition, stateSetAddition := metrics.CollectJobs(jobs.Items)
 				for _, v := range metricSetAddition.Items {
-					mts.Items[v.Name] = v
+					if mts.Items[v.Name] == nil {
+						mts.Items[v.Name] = v
+					}
 				}
 				for i, v := range stateSetAddition {
 					phases[i] = v
