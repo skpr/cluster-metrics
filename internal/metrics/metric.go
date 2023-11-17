@@ -69,6 +69,7 @@ func CombineRecords(recordsInput *MetricSet, recordsAppend *MetricSet) *MetricSe
 	return output
 }
 
+// CombineStates will combine two state sets.
 func CombineStates(input *StateSet, og *StateSet) *StateSet {
 	output := StateSet{}
 
@@ -77,7 +78,11 @@ func CombineStates(input *StateSet, og *StateSet) *StateSet {
 			if output[i] == nil {
 				output[i] = make(map[string]int)
 			}
-			output[i][a] = b
+			if output[i][a] == 0 {
+				output[i][a] = b
+			} else {
+				output[i][a] += b
+			}
 		}
 
 	}
@@ -87,7 +92,11 @@ func CombineStates(input *StateSet, og *StateSet) *StateSet {
 			if output[i] == nil {
 				output[i] = make(map[string]int)
 			}
-			output[i][a] = b
+			if output[i][a] == 0 {
+				output[i][a] = b
+			} else {
+				output[i][a] += b
+			}
 		}
 	}
 

@@ -129,5 +129,18 @@ func TestCombineStates(t *testing.T) {
 	}
 
 	three := CombineStates(one, two)
-	fmt.Sprint(three)
+	for x, y := range *three {
+		switch x {
+		case "Pod":
+			assert.Equal(t, y["y"], 1)
+		case "Deployment":
+			assert.Equal(t, y["b"], 3)
+		case "PretendObject":
+			assert.Equal(t, y["c"], 3)
+		case "OtherPretendObject":
+			assert.Equal(t, y["c"], 3)
+		default:
+			t.Fail()
+		}
+	}
 }
