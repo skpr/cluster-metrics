@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -96,7 +95,6 @@ func TestCombineRecords(t *testing.T) {
 	}
 
 	output := CombineRecords(&starting, &adding)
-	fmt.Sprint(output, expectedOutput)
 
 	assert.Equal(t, expectedOutput.Items["Pod-default-Running"].Value, output.Items["Pod-default-Running"].Value)
 	assert.Equal(t, expectedOutput.Items["Pod-default-Failed"].Value, output.Items["Pod-default-Failed"].Value)
