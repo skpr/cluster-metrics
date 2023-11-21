@@ -60,7 +60,7 @@ func CollectCronJobs(cronjobs []batchv1.CronJob) (*MetricSet, StateSet) {
 	stateSet := make(StateSet)
 	stateSet["CronJob"] = map[string]int{}
 	for _, cronjob := range cronjobs {
-		if cronjob.Spec.Suspend != nil || *cronjob.Spec.Suspend {
+		if cronjob.Spec.Suspend != nil && *cronjob.Spec.Suspend {
 			metrics.Increment(findOwnerKind(cronjob.ObjectMeta), cronjob.ObjectMeta.Namespace, "Suspended")
 			stateSet["CronJob"]["Suspended"]++
 		} else if cronjob.Spec.Suspend == nil || !*cronjob.Spec.Suspend {
