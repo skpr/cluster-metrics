@@ -26,10 +26,10 @@ func TestLog(t *testing.T) {
 	s := buf.String()
 	fmt.Println(s)
 
-	json1 := `{"name":"PodStatus","value":2,"type":"gauge","labels":{"kind":"ReplicaSet","namespace":"foo","phase":"Pending"}}`
-	json2 := `{"name":"PodStatus","value":1,"type":"gauge","labels":{"kind":"ReplicaSet","namespace":"foo","phase":"Running"}}`
-	json3 := `{"name":"PodStatus","value":1,"type":"gauge","labels":{"kind":"ReplicaSet","namespace":"bar","phase":"Pending"}}`
-	json4 := `{"name":"PodStatus","value":4,"type":"gauge","labels":{"kind":"ReplicaSet","namespace":"bar","phase":"Running"}}`
+	json1 := `{"name":"ObjectStatus","value":2,"type":"gauge","labels":{"kind":"ReplicaSet","namespace":"foo","phase":"Pending"}}`
+	json2 := `{"name":"ObjectStatus","value":1,"type":"gauge","labels":{"kind":"ReplicaSet","namespace":"foo","phase":"Running"}}`
+	json3 := `{"name":"ObjectStatus","value":1,"type":"gauge","labels":{"kind":"ReplicaSet","namespace":"bar","phase":"Pending"}}`
+	json4 := `{"name":"ObjectStatus","value":4,"type":"gauge","labels":{"kind":"ReplicaSet","namespace":"bar","phase":"Running"}}`
 
 	assert.Contains(t, s, json1)
 	assert.Contains(t, s, json2)

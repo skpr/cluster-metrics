@@ -7,7 +7,7 @@ import (
 
 const (
 	typeGauge  = "gauge"
-	metricName = "PodStatus"
+	metricName = "ObjectStatus"
 )
 
 // Log logs the metrics to the writer.
