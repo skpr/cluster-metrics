@@ -112,8 +112,6 @@ func CollectJobs(jobs []batchv1.Job) (*MetricSet, StateSet) {
 	return metrics, stateSet
 }
 
-// TODO ADD SKPR-SPECIFIC (PROJECT AND ENVIRONMENT) RESOURCES
-
 // findOwnerKind find the owner kind.
 func findOwnerKind(meta v1.ObjectMeta) string {
 	for _, ref := range meta.OwnerReferences {
