@@ -24,7 +24,8 @@ func CollectPods(pods []corev1.Pod) (*MetricSet, StateSet) {
 			for _, container := range pod.Status.ContainerStatuses {
 				PodStatus = container.State.Terminated.Reason
 			}
-		} else {
+		}
+		if PodStatus == "" {
 			PodStatus = string(pod.Status.Phase)
 		}
 

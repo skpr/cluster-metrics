@@ -44,6 +44,15 @@ func TestWorkflow(t *testing.T) {
 					},
 					Status: corev1.PodStatus{
 						Phase: "Pending",
+						ContainerStatuses: []corev1.ContainerStatus{
+							{
+								State: corev1.ContainerState{
+									Waiting: &corev1.ContainerStateWaiting{
+										Reason: "ErrImagePullBackOff",
+									},
+								},
+							},
+						},
 					},
 				},
 				{
@@ -61,6 +70,15 @@ func TestWorkflow(t *testing.T) {
 					},
 					Status: corev1.PodStatus{
 						Phase: "Failed",
+						ContainerStatuses: []corev1.ContainerStatus{
+							{
+								State: corev1.ContainerState{
+									Terminated: &corev1.ContainerStateTerminated{
+										Reason: "ErrCannotRun",
+									},
+								},
+							},
+						},
 					},
 				},
 				{
@@ -133,7 +151,7 @@ func TestWorkflow(t *testing.T) {
 	assert.Equal(t, mts.Items["Pod-project-d-Succeeded"].Labels["phase"], "Succeeded")
 
 	assert.Equal(t, phases["Pod"]["Running"], 1)
-	assert.Equal(t, phases["Pod"]["Pending"], 1)
-	assert.Equal(t, phases["Pod"]["Failed"], 1)
+	assert.Equal(t, phases["Pod"]["ErrImagePullBackOff"], 1)
+	assert.Equal(t, phases["Pod"]["ErrCannotRun"], 1)
 	assert.Equal(t, phases["Pod"]["Succeeded"], 2)
 }
