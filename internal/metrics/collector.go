@@ -13,8 +13,26 @@ func CollectPods(pods []corev1.Pod) (*MetricSet, StateSet) {
 	stateSet := make(StateSet)
 	stateSet["Pod"] = map[string]int{}
 	for _, pod := range pods {
+
+		// Determine the correct PodStatus to report on.
+		var PodStatus string
+		if pod.Status.Phase == "Pending" {
+			for _, container := range pod.Status.ContainerStatuses {
+				PodStatus = container.State.Waiting.Reason
+			}
+		} else if pod.Status.Phase == "Failed" {
+			for _, container := range pod.Status.ContainerStatuses {
+				PodStatus = container.State.Terminated.Reason
+			}
+		} else {
+			PodStatus = string(pod.Status.Phase)
+		}
+
+		// Metrics for Logging
 		metrics.Increment(findOwnerKind(pod.ObjectMeta), pod.ObjectMeta.Namespace, pod.Status.Phase)
-		stateSet["Pod"][string(pod.Status.Phase)]++
+
+		// Metrics for Pushing
+		stateSet["Pod"][PodStatus]++
 
 	}
 	return metrics, stateSet
