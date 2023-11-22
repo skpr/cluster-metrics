@@ -118,15 +118,15 @@ func TestPusher_ConvertToMetricData(t *testing.T) {
 	for _, v := range expected {
 		switch *v.Dimensions[0].Value {
 		case "Pod":
-			assert.Equal(t, *expected[0].Dimensions[0].Value, *data[0].Dimensions[0].Value)
-			assert.Equal(t, *expected[0].Dimensions[1].Value, *data[0].Dimensions[1].Value)
-			assert.Equal(t, *expected[0].Dimensions[2].Value, *data[0].Dimensions[2].Value)
-			assert.Equal(t, *expected[0].Value, *data[0].Value)
+			assert.Equal(t, *v.Dimensions[0].Value, *data[0].Dimensions[0].Value)
+			assert.Equal(t, *v.Dimensions[1].Value, *data[0].Dimensions[1].Value)
+			assert.Equal(t, *v.Dimensions[2].Value, *data[0].Dimensions[2].Value)
+			assert.Equal(t, *v.Value, *data[0].Value)
 		case "Deployment":
-			assert.Equal(t, *expected[1].Dimensions[0].Value, *data[1].Dimensions[0].Value)
-			assert.Equal(t, *expected[1].Dimensions[1].Value, *data[1].Dimensions[1].Value)
-			assert.Equal(t, *expected[1].Dimensions[2].Value, *data[1].Dimensions[2].Value)
-			assert.Equal(t, *expected[1].Value, *data[1].Value)
+			assert.Equal(t, *v.Dimensions[0].Value, *data[1].Dimensions[0].Value)
+			assert.Equal(t, *v.Dimensions[1].Value, *data[1].Dimensions[1].Value)
+			assert.Equal(t, *v.Dimensions[2].Value, *data[1].Dimensions[2].Value)
+			assert.Equal(t, *v.Value, *data[1].Value)
 		default:
 			t.Fail()
 		}
