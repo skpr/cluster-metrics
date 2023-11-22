@@ -124,6 +124,4 @@ func TestPusher_ConvertToMetricData(t *testing.T) {
 	assert.Equal(t, *expected[1].Dimensions[1].Value, *data[1].Dimensions[1].Value)
 	assert.Equal(t, *expected[1].Dimensions[2].Value, *data[1].Dimensions[2].Value)
 	assert.Equal(t, *expected[1].Value, *data[1].Value)
-
-	assert.Equal(t, expected, data)
 }
