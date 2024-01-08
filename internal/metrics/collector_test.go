@@ -12,6 +12,158 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+func TestMetricsCollector_CollectMetrics_PodMultipleStatuses(t *testing.T) {
+
+	values := provideTestPodValuesMultipleErrors()
+
+	var pods []corev1.Pod
+	for _, val := range values {
+
+		Pod := corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: val["namespace"],
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						Kind: val["kind"],
+					},
+				},
+			},
+			Status: corev1.PodStatus{
+				Phase: corev1.PodPhase(val["phase"]),
+			},
+		}
+
+		if val["namespace"] == "abc" {
+			Pod.Status.ContainerStatuses = []corev1.ContainerStatus{
+				{
+					Name: "ContainerTerminated",
+					State: corev1.ContainerState{
+						Terminated: &corev1.ContainerStateTerminated{
+							Reason: "CustomErrImageForbidden",
+						},
+					},
+				},
+				{
+					Name: "ContainerWaiting",
+					State: corev1.ContainerState{
+						Waiting: &corev1.ContainerStateWaiting{
+							Reason: "CustomErrImagePull",
+						},
+					},
+				},
+				{
+					Name:  "ContainerReady",
+					Ready: true,
+				},
+			}
+		}
+
+		if val["namespace"] == "def" {
+			Pod.Status.ContainerStatuses = []corev1.ContainerStatus{
+				{
+					Name: "ContainerTerminated",
+					State: corev1.ContainerState{
+						Terminated: &corev1.ContainerStateTerminated{
+							Reason: "ErrCrashloopBackoff",
+						},
+					},
+				},
+				{
+					Name: "ContainerWaiting",
+					State: corev1.ContainerState{
+						Waiting: &corev1.ContainerStateWaiting{
+							Reason: "ErrImgPull",
+						},
+					},
+				},
+			}
+		}
+
+		if val["namespace"] == "ghi" {
+			Pod.Status.ContainerStatuses = []corev1.ContainerStatus{
+				{
+					Name: "ContainerTerminated",
+					State: corev1.ContainerState{
+						Terminated: &corev1.ContainerStateTerminated{
+							Reason: "CustomErrImageForbidden",
+						},
+					},
+				},
+				{
+					Name: "ContainerWaiting",
+					State: corev1.ContainerState{
+						Waiting: &corev1.ContainerStateWaiting{
+							Reason: "CrashLoopBackoff",
+						},
+					},
+				},
+			}
+		}
+
+		if val["namespace"] == "hjk" {
+			Pod.Status.ContainerStatuses = []corev1.ContainerStatus{
+				{
+					Name: "ContainerTerminated",
+					State: corev1.ContainerState{
+						Terminated: &corev1.ContainerStateTerminated{
+							Reason: "CustomUnknown",
+						},
+					},
+				},
+				{
+					Name: "ContainerWaiting",
+					State: corev1.ContainerState{
+						Waiting: &corev1.ContainerStateWaiting{
+							Reason: "Unknown",
+						},
+					},
+				},
+			}
+		}
+
+		if val["namespace"] == "lmn" {
+			Pod.Status.ContainerStatuses = []corev1.ContainerStatus{
+				{
+					Name: "ContainerTerminated",
+					State: corev1.ContainerState{
+						Terminated: &corev1.ContainerStateTerminated{
+							Reason: "CustomUnknown",
+						},
+					},
+				},
+				{
+					Name:  "ContainerReady",
+					Ready: true,
+				},
+			}
+		}
+		pods = append(pods, Pod)
+	}
+
+	assert.Equal(t, 11, len(pods))
+	metrics, stateSet := CollectPods(pods)
+
+	assert.Equal(t, 10, len(metrics.Items))
+	assert.Equal(t, 11, len(pods))
+
+	assert.Equal(t, 1, metrics.Items["Pod-abc-Pending"].Value)
+	assert.Equal(t, 1, metrics.Items["Pod-abc-Failed"].Value)
+	assert.Equal(t, 1, metrics.Items["Pod-def-Pending"].Value)
+	assert.Equal(t, 1, metrics.Items["Pod-def-Failed"].Value)
+	assert.Equal(t, 1, metrics.Items["Pod-ghi-Pending"].Value)
+	assert.Equal(t, 1, metrics.Items["Pod-ghi-Failed"].Value)
+	assert.Equal(t, 2, metrics.Items["Pod-hjk-Pending"].Value)
+	assert.Equal(t, 1, metrics.Items["Pod-hjk-Failed"].Value)
+	assert.Equal(t, 1, metrics.Items["Pod-lmn-Pending"].Value)
+	assert.Equal(t, 1, metrics.Items["Pod-lmn-Failed"].Value)
+
+	assert.Equal(t, 2, stateSet["Pod"]["CustomErrImageForbidden,CustomErrImagePull"])
+	assert.Equal(t, 2, stateSet["Pod"]["ErrCrashloopBackoff,ErrImgPull"])
+	assert.Equal(t, 2, stateSet["Pod"]["CustomErrImageForbidden,CrashLoopBackoff"])
+	assert.Equal(t, 3, stateSet["Pod"]["CustomUnknown,Unknown"])
+	assert.Equal(t, 2, stateSet["Pod"]["CustomUnknown"])
+}
+
 func TestMetricsCollector_CollectMetrics_Pods(t *testing.T) {
 
 	values := provideTestPodValues()
@@ -58,6 +210,23 @@ func provideTestPodValues() []map[string]string {
 	return vals
 }
 
+func provideTestPodValuesMultipleErrors() []map[string]string {
+	vals := []map[string]string{
+		{"kind": "Pod", "namespace": "abc", "phase": string(corev1.PodPending)},
+		{"kind": "Pod", "namespace": "abc", "phase": string(corev1.PodFailed)},
+		{"kind": "Pod", "namespace": "def", "phase": string(corev1.PodPending)},
+		{"kind": "Pod", "namespace": "def", "phase": string(corev1.PodFailed)},
+		{"kind": "Pod", "namespace": "ghi", "phase": string(corev1.PodPending)},
+		{"kind": "Pod", "namespace": "ghi", "phase": string(corev1.PodFailed)},
+		{"kind": "Pod", "namespace": "hjk", "phase": string(corev1.PodPending)},
+		{"kind": "Pod", "namespace": "hjk", "phase": string(corev1.PodFailed)},
+		{"kind": "Pod", "namespace": "hjk", "phase": string(corev1.PodPending)},
+		{"kind": "Pod", "namespace": "lmn", "phase": string(corev1.PodFailed)},
+		{"kind": "Pod", "namespace": "lmn", "phase": string(corev1.PodPending)},
+	}
+	return vals
+}
+
 func TestMetricsCollector_CollectMetrics_Deployments(t *testing.T) {
 
 	values := provideTestDeploymentValues()
@@ -86,10 +255,10 @@ func TestMetricsCollector_CollectMetrics_Deployments(t *testing.T) {
 	metrics, stateSet := CollectDeployments(deployments)
 
 	assert.Equal(t, 3, metrics.Items["Deployment-def-Ready"].Value)
-	assert.Equal(t, 1, metrics.Items["Deployment-def-NotReady"].Value)
+	assert.Equal(t, 1, metrics.Items["Deployment-def-Pending"].Value)
 
 	assert.Equal(t, 3, stateSet["Deployment"]["Ready"])
-	assert.Equal(t, 1, stateSet["Deployment"]["NotReady"])
+	assert.Equal(t, 1, stateSet["Deployment"]["Pending"])
 
 }
 
@@ -130,10 +299,10 @@ func TestMetricsCollector_CollectMetrics_CronJobs(t *testing.T) {
 
 	metrics, phaseSet := CollectCronJobs(cronjobs)
 
-	assert.Equal(t, 2, metrics.Items["CronJob-def-Active"].Value)
+	assert.Equal(t, 2, metrics.Items["CronJob-def-Running"].Value)
 	assert.Equal(t, 3, metrics.Items["CronJob-def-Suspended"].Value)
 
-	assert.Equal(t, 2, phaseSet["CronJob"]["Active"])
+	assert.Equal(t, 2, phaseSet["CronJob"]["Running"])
 	assert.Equal(t, 3, phaseSet["CronJob"]["Suspended"])
 
 }
@@ -180,13 +349,13 @@ func TestMetricsCollector_CollectMetrics_Jobs(t *testing.T) {
 
 	metrics, phaseSet := CollectJobs(jobs)
 
-	assert.Equal(t, 3, metrics.Items["Job-def-Active"].Value)
+	assert.Equal(t, 3, metrics.Items["Job-def-Running"].Value)
 	assert.Equal(t, 2, metrics.Items["Job-def-Failed"].Value)
-	assert.Equal(t, 4, metrics.Items["Job-def-Succeeded"].Value)
+	assert.Equal(t, 4, metrics.Items["Job-def-Complete"].Value)
 
-	assert.Equal(t, 3, phaseSet["Job"]["Active"])
+	assert.Equal(t, 3, phaseSet["Job"]["Running"])
 	assert.Equal(t, 2, phaseSet["Job"]["Failed"])
-	assert.Equal(t, 4, phaseSet["Job"]["Succeeded"])
+	assert.Equal(t, 4, phaseSet["Job"]["Complete"])
 
 }
 

@@ -11,14 +11,14 @@ import (
 
 func TestLog(t *testing.T) {
 	metrics := NewMetricSet()
-	metrics.Increment("ReplicaSet", "foo", corev1.PodPending)
-	metrics.Increment("ReplicaSet", "foo", corev1.PodPending)
-	metrics.Increment("ReplicaSet", "foo", corev1.PodRunning)
-	metrics.Increment("ReplicaSet", "bar", corev1.PodPending)
-	metrics.Increment("ReplicaSet", "bar", corev1.PodRunning)
-	metrics.Increment("ReplicaSet", "bar", corev1.PodRunning)
-	metrics.Increment("ReplicaSet", "bar", corev1.PodRunning)
-	metrics.Increment("ReplicaSet", "bar", corev1.PodRunning)
+	metrics.Increment("ReplicaSet", "foo", string(corev1.PodPending))
+	metrics.Increment("ReplicaSet", "foo", string(corev1.PodPending))
+	metrics.Increment("ReplicaSet", "foo", string(corev1.PodRunning))
+	metrics.Increment("ReplicaSet", "bar", string(corev1.PodPending))
+	metrics.Increment("ReplicaSet", "bar", string(corev1.PodRunning))
+	metrics.Increment("ReplicaSet", "bar", string(corev1.PodRunning))
+	metrics.Increment("ReplicaSet", "bar", string(corev1.PodRunning))
+	metrics.Increment("ReplicaSet", "bar", string(corev1.PodRunning))
 
 	var buf bytes.Buffer
 	err := Log(&buf, metrics)

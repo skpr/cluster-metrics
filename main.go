@@ -96,6 +96,18 @@ func main() {
 				phases = metrics.CombineStates(&phases, &stateSetAddition)
 			}
 			{
+				// Get the replicasets
+				replicasets, err := clientset.AppsV1().ReplicaSets(namespace.Name).List(context.TODO(), metav1.ListOptions{})
+				if err != nil {
+					panic(err.Error())
+				}
+
+				// Collect the metrics.
+				metricSetAddition, stateSetAddition := metrics.CollectReplicaSets(replicasets.Items)
+				mts = metrics.CombineRecords(mts, metricSetAddition)
+				phases = metrics.CombineStates(&phases, &stateSetAddition)
+			}
+			{
 				// Get the cronjobs
 				cronjobs, err := clientset.BatchV1().CronJobs(namespace.Name).List(context.TODO(), metav1.ListOptions{})
 				if err != nil {

@@ -2,8 +2,6 @@ package metrics
 
 import (
 	"fmt"
-
-	corev1 "k8s.io/api/core/v1"
 )
 
 // StateSet is the state of the metrics.
@@ -31,7 +29,7 @@ type Metric struct {
 }
 
 // Increment the metric.
-func (s *MetricSet) Increment(kind, namespace string, phase corev1.PodPhase) {
+func (s *MetricSet) Increment(kind, namespace string, phase string) {
 	key := fmt.Sprintf("%s-%s-%s", kind, namespace, phase)
 	if metric, found := s.Items[key]; found {
 		metric.Value++
