@@ -10,18 +10,30 @@ import (
 )
 
 const (
-	KindPod         = "Pod"
-	KindDeployment  = "Deployment"
-	KindReplicaSet  = "ReplicaSet"
+	// KindPod is the cost reference to the Kubernetes Pod object.
+	KindPod = "Pod"
+	// KindDeployment is the cost reference to the Kubernetes Deployment object.
+	KindDeployment = "Deployment"
+	// KindReplicaSet is the cost reference to the Kubernetes ReplicaSet object.
+	KindReplicaSet = "ReplicaSet"
+	// KindStatefulSet is the cost reference to the Kubernetes StatefulSet object.
 	KindStatefulSet = "StatefulSet"
-	KindCronJob     = "CronJob"
-	KindJob         = "Job"
+	// KindCronJob is the cost reference to the Kubernetes CronJob object.
+	KindCronJob = "CronJob"
+	// KindJob is the cost reference to the Kubernetes Job object.
+	KindJob = "Job"
 
-	StateReady     = string(corev1.PodReady)
-	StateNotReady  = string(corev1.PodPending)
+	// StateReady is the const representing the state for an object being Ready
+	StateReady = string(corev1.PodReady)
+	// StateNotReady is the const representing the state for an object not being Ready
+	StateNotReady = string(corev1.PodPending)
+	// StateSuspended is the const representing the state for a CronJob being Suspended
 	StateSuspended = string(batchv1.JobSuspended)
-	StateActive    = string(corev1.PodRunning)
-	StateFailed    = string(batchv1.JobFailed)
+	// StateActive is the const representing the state for a CronJob being not Suspended
+	StateActive = string(corev1.PodRunning)
+	// StateFailed is the const representing the state for an object having been Failed
+	StateFailed = string(batchv1.JobFailed)
+	// StateSucceeded is the const representing the state for an object having been completed successfully
 	StateSucceeded = string(batchv1.JobComplete)
 )
 
