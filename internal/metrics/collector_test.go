@@ -137,14 +137,30 @@ func TestMetricsCollector_CollectMetrics_PodMultipleStatuses(t *testing.T) {
 				},
 			}
 		}
+
+		if val["namespace"] == "opq" {
+			Pod.Status.ContainerStatuses = []corev1.ContainerStatus{
+				{
+					Name: "ContainerTerminated",
+					State: corev1.ContainerState{
+						Terminated: &corev1.ContainerStateTerminated{
+							Reason: "SuperSecretUnknownGoodLuck",
+						},
+					},
+				},
+				{
+					Name:  "ContainerReady",
+					Ready: false,
+				},
+			}
+		}
 		pods = append(pods, Pod)
 	}
 
-	assert.Equal(t, 11, len(pods))
 	metrics, stateSet := CollectPods(pods)
 
-	assert.Equal(t, 10, len(metrics.Items))
-	assert.Equal(t, 11, len(pods))
+	assert.Equal(t, 11, len(metrics.Items))
+	assert.Equal(t, 12, len(pods))
 
 	assert.Equal(t, 1, metrics.Items["Pod-abc-Pending"].Value)
 	assert.Equal(t, 1, metrics.Items["Pod-abc-Failed"].Value)
@@ -156,12 +172,16 @@ func TestMetricsCollector_CollectMetrics_PodMultipleStatuses(t *testing.T) {
 	assert.Equal(t, 1, metrics.Items["Pod-hjk-Failed"].Value)
 	assert.Equal(t, 1, metrics.Items["Pod-lmn-Pending"].Value)
 	assert.Equal(t, 1, metrics.Items["Pod-lmn-Failed"].Value)
+	assert.Equal(t, 1, metrics.Items["Pod-opq-Unschedulable"].Value)
 
-	assert.Equal(t, 2, stateSet["Pod"]["CustomErrImageForbidden,CustomErrImagePull"])
-	assert.Equal(t, 2, stateSet["Pod"]["ErrCrashloopBackoff,ErrImgPull"])
-	assert.Equal(t, 2, stateSet["Pod"]["CustomErrImageForbidden,CrashLoopBackoff"])
-	assert.Equal(t, 3, stateSet["Pod"]["CustomUnknown,Unknown"])
-	assert.Equal(t, 2, stateSet["Pod"]["CustomUnknown"])
+	assert.Equal(t, 1, stateSet["Pod"]["SuperSecretUnknownGoodLuck"])
+	assert.Equal(t, 4, stateSet["Pod"]["CustomErrImageForbidden"])
+	assert.Equal(t, 2, stateSet["Pod"]["ErrCrashloopBackoff"])
+	assert.Equal(t, 2, stateSet["Pod"]["CustomErrImagePull"])
+	assert.Equal(t, 2, stateSet["Pod"]["CrashLoopBackoff"])
+	assert.Equal(t, 5, stateSet["Pod"]["CustomUnknown"])
+	assert.Equal(t, 2, stateSet["Pod"]["ErrImgPull"])
+	assert.Equal(t, 3, stateSet["Pod"]["Unknown"])
 }
 
 func TestMetricsCollector_CollectMetrics_Pods(t *testing.T) {
@@ -223,6 +243,7 @@ func provideTestPodValuesMultipleErrors() []map[string]string {
 		{"kind": "Pod", "namespace": "hjk", "phase": string(corev1.PodPending)},
 		{"kind": "Pod", "namespace": "lmn", "phase": string(corev1.PodFailed)},
 		{"kind": "Pod", "namespace": "lmn", "phase": string(corev1.PodPending)},
+		{"kind": "Pod", "namespace": "opq", "phase": string(corev1.PodReasonUnschedulable)},
 	}
 	return vals
 }

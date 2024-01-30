@@ -1,8 +1,6 @@
 package metrics
 
 import (
-	"strings"
-
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -44,40 +42,26 @@ func CollectPods(pods []corev1.Pod) (*MetricSet, StateSet) {
 	stateSet[KindPod] = map[string]int{}
 	for _, pod := range pods {
 
-		// Determine the correct PodStatus to report on.
-		var PodStatus string
-		var Reasons []string
+		for _, containerStatus := range pod.Status.ContainerStatuses {
 
-		for _, container := range pod.Status.ContainerStatuses {
-			if !container.Ready {
+			if !containerStatus.Ready {
 				// Loop over terminated containers and stash reason.
-				if container.State.Terminated != nil {
-					Reasons = append(Reasons, container.State.Terminated.Reason)
+				if containerStatus.State.Terminated != nil {
+					stateSet[KindPod][containerStatus.State.Terminated.Reason]++
 				}
 
 				// Loop over waiting containers and stash reason.
-				if container.State.Waiting != nil {
-					Reasons = append(Reasons, container.State.Waiting.Reason)
+				if containerStatus.State.Waiting != nil {
+					stateSet[KindPod][containerStatus.State.Waiting.Reason]++
 				}
 			}
-		}
-
-		// Concat reasons into single string
-		if len(Reasons) > 1 {
-			PodStatus = strings.Join(Reasons, ",")
-		} else if len(Reasons) == 1 {
-			PodStatus = Reasons[0]
-		}
-
-		if PodStatus == "" {
-			PodStatus = string(pod.Status.Phase)
 		}
 
 		// Metrics for Logging
 		metrics.Increment(findOwnerKind(pod.ObjectMeta), pod.ObjectMeta.Namespace, string(pod.Status.Phase))
 
 		// Metrics for Pushing
-		stateSet[KindPod][PodStatus]++
+		stateSet[KindPod][string(pod.Status.Phase)]++
 
 	}
 	return metrics, stateSet
