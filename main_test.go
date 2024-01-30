@@ -128,7 +128,7 @@ func TestWorkflow(t *testing.T) {
 	}
 
 	assert.Len(t, mts.Items, 4)
-	assert.Len(t, phases["Pod"], 4)
+	assert.Len(t, phases["Pod"], 6)
 
 	assert.Equal(t, mts.Items["Pod-project-a-Running"].Value, 1)
 	assert.Equal(t, mts.Items["Pod-project-a-Running"].Labels["kind"], "Pod")
