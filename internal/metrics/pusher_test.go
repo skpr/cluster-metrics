@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -116,19 +117,29 @@ func TestPusher_ConvertToMetricData(t *testing.T) {
 	data := ConvertToMetricData(*timestamp, "skpr-test", input)
 
 	for _, v := range expected {
-		switch *v.Dimensions[0].Value {
-		case "Pod":
-			assert.Equal(t, *v.Dimensions[0].Value, *data[0].Dimensions[0].Value)
-			assert.Equal(t, *v.Dimensions[1].Value, *data[0].Dimensions[1].Value)
-			assert.Equal(t, *v.Dimensions[2].Value, *data[0].Dimensions[2].Value)
-			assert.Equal(t, *v.Value, *data[0].Value)
-		case "Deployment":
-			assert.Equal(t, *v.Dimensions[0].Value, *data[1].Dimensions[0].Value)
-			assert.Equal(t, *v.Dimensions[1].Value, *data[1].Dimensions[1].Value)
-			assert.Equal(t, *v.Dimensions[2].Value, *data[1].Dimensions[2].Value)
-			assert.Equal(t, *v.Value, *data[1].Value)
-		default:
-			t.Fail()
+
+		itemOne, errOne := getDataItemWithValue(*v.Dimensions[0].Value, data)
+		itemTwo, errTwo := getDataItemWithValue(*v.Dimensions[1].Value, data)
+		itemThree, errThree := getDataItemWithValue(*v.Dimensions[2].Value, data)
+
+		assert.Nil(t, errOne)
+		assert.Nil(t, errTwo)
+		assert.Nil(t, errThree)
+
+		assert.Equal(t, *v.Dimensions[0].Value, *itemOne.Dimensions[0].Value)
+		assert.Equal(t, *v.Dimensions[1].Value, *itemTwo.Dimensions[1].Value)
+		assert.Equal(t, *v.Dimensions[2].Value, *itemThree.Dimensions[2].Value)
+	}
+}
+
+// Helper function for tests to prevent flake.
+func getDataItemWithValue(want string, input []types.MetricDatum) (types.MetricDatum, error) {
+	for _, v := range input {
+		for x := range v.Dimensions {
+			if *v.Dimensions[x].Value == want {
+				return v, nil
+			}
 		}
 	}
+	return types.MetricDatum{}, errors.New("not found")
 }
