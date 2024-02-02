@@ -118,9 +118,9 @@ func TestPusher_ConvertToMetricData(t *testing.T) {
 
 	for _, v := range expected {
 
-		errOne, itemOne := getDataItemWithValue(*v.Dimensions[0].Value, data)
-		errTwo, itemTwo := getDataItemWithValue(*v.Dimensions[1].Value, data)
-		errThree, itemThree := getDataItemWithValue(*v.Dimensions[2].Value, data)
+		itemOne, errOne := getDataItemWithValue(*v.Dimensions[0].Value, data)
+		itemTwo, errTwo := getDataItemWithValue(*v.Dimensions[1].Value, data)
+		itemThree, errThree := getDataItemWithValue(*v.Dimensions[2].Value, data)
 
 		assert.Nil(t, errOne)
 		assert.Nil(t, errTwo)
@@ -133,13 +133,13 @@ func TestPusher_ConvertToMetricData(t *testing.T) {
 }
 
 // Helper function for tests to prevent flake.
-func getDataItemWithValue(want string, input []types.MetricDatum) (error, types.MetricDatum) {
+func getDataItemWithValue(want string, input []types.MetricDatum) (types.MetricDatum, error) {
 	for _, v := range input {
-		for x, _ := range v.Dimensions {
+		for x := range v.Dimensions {
 			if *v.Dimensions[x].Value == want {
-				return nil, v
+				return v, nil
 			}
 		}
 	}
-	return errors.New("not found"), types.MetricDatum{}
+	return types.MetricDatum{}, errors.New("not found")
 }
