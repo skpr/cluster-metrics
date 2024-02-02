@@ -2,12 +2,11 @@ package metrics
 
 import (
 	"fmt"
-
-	corev1 "k8s.io/api/core/v1"
 )
 
-// PhaseSet is the phase set.
-type PhaseSet map[string]int
+// StateSet is the state of the metrics.
+// ie Pod Phase, Deployment Status or CronJob Suspended state.
+type StateSet map[string]map[string]int
 
 // MetricSet is the metric set.
 type MetricSet struct {
@@ -17,7 +16,7 @@ type MetricSet struct {
 // NewMetricSet creates a new metric set.
 func NewMetricSet() *MetricSet {
 	return &MetricSet{
-		Items: make(map[string]*Metric),
+		Items: map[string]*Metric{},
 	}
 }
 
@@ -30,19 +29,74 @@ type Metric struct {
 }
 
 // Increment the metric.
-func (s *MetricSet) Increment(kind, namespace string, phase corev1.PodPhase) {
+func (s *MetricSet) Increment(kind, namespace string, phase string) {
 	key := fmt.Sprintf("%s-%s-%s", kind, namespace, phase)
 	if metric, found := s.Items[key]; found {
 		metric.Value++
 	} else {
 		metric := &Metric{
+			Name:  key,
+			Value: 1,
 			Labels: map[string]string{
 				dimensionKind:      kind,
 				dimensionNamespace: namespace,
-				dimensionPhase:     string(phase),
+				dimensionState:     string(phase),
 			},
-			Value: 1,
 		}
 		s.Items[key] = metric
 	}
+}
+
+// CombineRecords will combine two metric sets.
+func CombineRecords(recordsInput *MetricSet, recordsAppend *MetricSet) *MetricSet {
+
+	output := NewMetricSet()
+
+	for _, record := range recordsInput.Items {
+		output.Items[record.Name] = record
+	}
+
+	for _, record := range recordsAppend.Items {
+		if output.Items[record.Name] == nil {
+			output.Items[record.Name] = record
+		} else {
+			output.Items[record.Name].Value++
+		}
+	}
+
+	return output
+}
+
+// CombineStates will combine two state sets.
+func CombineStates(input *StateSet, og *StateSet) StateSet {
+	output := StateSet{}
+
+	for i, v := range *input {
+		for a, b := range v {
+			if output[i] == nil {
+				output[i] = make(map[string]int)
+			}
+			if output[i][a] == 0 {
+				output[i][a] = b
+			} else {
+				output[i][a] += b
+			}
+		}
+
+	}
+
+	for i, v := range *og {
+		for a, b := range v {
+			if output[i] == nil {
+				output[i] = make(map[string]int)
+			}
+			if output[i][a] == 0 {
+				output[i][a] = b
+			} else {
+				output[i][a] += b
+			}
+		}
+	}
+
+	return output
 }
