@@ -4,9 +4,14 @@ builds:
     goos: [ linux, darwin ]
     goarch: [ amd64 ]
 archives:
-  - replacements:
-      darwin: macOS
-    format: binary
+    - format: binary
+    - id: assets
+      name_template: >-
+        {{- .ProjectName }}_
+        {{- .Tag }}_
+        {{- if eq .Os "darwin" }}macOS
+        {{- else if eq .Os "linux"}}linux{{ end }}_
+        {{- if eq .Arch "amd64" }}amd64{{ end }}
 dockers:
   - image_templates:
       - "skpr/cluster-metrics:latest"
