@@ -21,6 +21,8 @@ const (
 	// KindJob is the cost reference to the Kubernetes Job object.
 	KindJob = "Job"
 
+	// StateScaledDown indicates the desired replicas for the object is 0.
+	StateScaledDown = "ScaledDown"
 	// StateReady is the const representing the state for an object being Ready
 	StateReady = string(corev1.PodReady)
 	// StateNotReady is the const representing the state for an object not being Ready
@@ -73,7 +75,10 @@ func CollectDeployments(deployments []appsv1.Deployment) (*MetricSet, StateSet) 
 	stateSet := make(StateSet)
 	stateSet[KindDeployment] = map[string]int{}
 	for _, deployment := range deployments {
-		if deployment.Status.ReadyReplicas > 0 {
+		if deployment.Spec.Replicas != nil && *deployment.Spec.Replicas == 0 {
+			metrics.Increment(findOwnerKind(deployment.ObjectMeta), deployment.ObjectMeta.Namespace, StateScaledDown)
+			stateSet[KindDeployment][StateScaledDown]++
+		} else if deployment.Status.ReadyReplicas > 0 {
 			metrics.Increment(findOwnerKind(deployment.ObjectMeta), deployment.ObjectMeta.Namespace, StateReady)
 			stateSet[KindDeployment][StateReady]++
 		} else {
@@ -90,7 +95,10 @@ func CollectStatefulSets(statefulsets []appsv1.StatefulSet) (*MetricSet, StateSe
 	stateSet := make(StateSet)
 	stateSet[KindStatefulSet] = map[string]int{}
 	for _, statefulset := range statefulsets {
-		if statefulset.Status.AvailableReplicas > 0 {
+		if statefulset.Spec.Replicas != nil && *statefulset.Spec.Replicas == 0 {
+			metrics.Increment(findOwnerKind(statefulset.ObjectMeta), statefulset.ObjectMeta.Namespace, StateScaledDown)
+			stateSet[KindStatefulSet][StateScaledDown]++
+		} else if statefulset.Status.AvailableReplicas > 0 {
 			metrics.Increment(findOwnerKind(statefulset.ObjectMeta), statefulset.ObjectMeta.Namespace, StateReady)
 			stateSet[KindStatefulSet][StateReady]++
 		} else {
@@ -106,12 +114,15 @@ func CollectReplicaSets(replicasets []appsv1.ReplicaSet) (*MetricSet, StateSet) 
 	metrics := NewMetricSet()
 	stateSet := make(StateSet)
 	stateSet[KindReplicaSet] = map[string]int{}
-	for _, statefulset := range replicasets {
-		if statefulset.Status.AvailableReplicas > 0 {
-			metrics.Increment(findOwnerKind(statefulset.ObjectMeta), statefulset.ObjectMeta.Namespace, StateReady)
+	for _, replicaset := range replicasets {
+		if replicaset.Spec.Replicas != nil && *replicaset.Spec.Replicas == 0 {
+			metrics.Increment(findOwnerKind(replicaset.ObjectMeta), replicaset.ObjectMeta.Namespace, StateScaledDown)
+			stateSet[KindReplicaSet][StateScaledDown]++
+		} else if replicaset.Status.AvailableReplicas > 0 {
+			metrics.Increment(findOwnerKind(replicaset.ObjectMeta), replicaset.ObjectMeta.Namespace, StateReady)
 			stateSet[KindReplicaSet][StateReady]++
 		} else {
-			metrics.Increment(findOwnerKind(statefulset.ObjectMeta), statefulset.ObjectMeta.Namespace, StateNotReady)
+			metrics.Increment(findOwnerKind(replicaset.ObjectMeta), replicaset.ObjectMeta.Namespace, StateNotReady)
 			stateSet[KindReplicaSet][StateNotReady]++
 		}
 	}
