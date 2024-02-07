@@ -10,6 +10,8 @@ import (
 const (
 	// KindPod is the cost reference to the Kubernetes Pod object.
 	KindPod = "Pod"
+	// KindDaemonSet is a daemonset.
+	KindDaemonSet = "DaemonSet"
 	// KindDeployment is the cost reference to the Kubernetes Deployment object.
 	KindDeployment = "Deployment"
 	// KindReplicaSet is the cost reference to the Kubernetes ReplicaSet object.
@@ -35,6 +37,11 @@ const (
 	StateFailed = string(batchv1.JobFailed)
 	// StateSucceeded is the const representing the state for an object having been completed successfully
 	StateSucceeded = string(batchv1.JobComplete)
+
+	StateAvailable    = "Available"
+	StateUnavailable  = "Unavailable"
+	StateMisscheduled = "Misscheduled"
+	StateScheduled    = "Scheduled"
 )
 
 // CollectPods will collect ze metrics for pods.
@@ -124,6 +131,33 @@ func CollectReplicaSets(replicasets []appsv1.ReplicaSet) (*MetricSet, StateSet) 
 		} else {
 			metrics.Increment(findOwnerKind(replicaset.ObjectMeta), replicaset.ObjectMeta.Namespace, StateNotReady)
 			stateSet[KindReplicaSet][StateNotReady]++
+		}
+	}
+	return metrics, stateSet
+}
+
+// CollectDaemonSets will collect ze metrics for statefulsets.
+func CollectDaemonSets(daemonsets []appsv1.DaemonSet) (*MetricSet, StateSet) {
+	metrics := NewMetricSet()
+	stateSet := make(StateSet)
+	stateSet[KindDaemonSet] = map[string]int{}
+	for _, daemonset := range daemonsets {
+
+		if &daemonset.Status.NumberAvailable != nil {
+			metrics.Increment(findOwnerKind(daemonset.ObjectMeta), daemonset.ObjectMeta.Namespace, StateAvailable)
+			stateSet[KindDaemonSet][StateAvailable] += int(daemonset.Status.NumberAvailable)
+		}
+		if &daemonset.Status.NumberReady != nil {
+			metrics.Increment(findOwnerKind(daemonset.ObjectMeta), daemonset.ObjectMeta.Namespace, StateReady)
+			stateSet[KindDaemonSet][StateReady] += int(daemonset.Status.NumberReady)
+		}
+		if &daemonset.Status.NumberMisscheduled != nil {
+			metrics.Increment(findOwnerKind(daemonset.ObjectMeta), daemonset.ObjectMeta.Namespace, StateMisscheduled)
+			stateSet[KindDaemonSet][StateMisscheduled] += int(daemonset.Status.NumberMisscheduled)
+		}
+		if &daemonset.Status.NumberUnavailable != nil {
+			metrics.Increment(findOwnerKind(daemonset.ObjectMeta), daemonset.ObjectMeta.Namespace, StateUnavailable)
+			stateSet[KindDaemonSet][StateUnavailable] += int(daemonset.Status.NumberUnavailable)
 		}
 	}
 	return metrics, stateSet
