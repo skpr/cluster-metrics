@@ -10,6 +10,8 @@ import (
 const (
 	// KindPod is the cost reference to the Kubernetes Pod object.
 	KindPod = "Pod"
+	// KindDaemonSet is a daemonset.
+	KindDaemonSet = "DaemonSet"
 	// KindDeployment is the cost reference to the Kubernetes Deployment object.
 	KindDeployment = "Deployment"
 	// KindReplicaSet is the cost reference to the Kubernetes ReplicaSet object.
@@ -21,6 +23,8 @@ const (
 	// KindJob is the cost reference to the Kubernetes Job object.
 	KindJob = "Job"
 
+	// StateScaledDown indicates the desired replicas for the object is 0.
+	StateScaledDown = "ScaledDown"
 	// StateReady is the const representing the state for an object being Ready
 	StateReady = string(corev1.PodReady)
 	// StateNotReady is the const representing the state for an object not being Ready
@@ -28,11 +32,21 @@ const (
 	// StateSuspended is the const representing the state for a CronJob being Suspended
 	StateSuspended = string(batchv1.JobSuspended)
 	// StateActive is the const representing the state for a CronJob being not Suspended
-	StateActive = string(corev1.PodRunning)
+	StateActive = "Active"
+	// StateRunning is the const representing the state for a Job currently running
+	StateRunning = string(corev1.PodRunning)
 	// StateFailed is the const representing the state for an object having been Failed
 	StateFailed = string(batchv1.JobFailed)
 	// StateSucceeded is the const representing the state for an object having been completed successfully
 	StateSucceeded = string(batchv1.JobComplete)
+	// StateAvailable is the state of which a DaemonSet is available for scheduling.
+	StateAvailable = "Available"
+	// StateUnavailable is the state of which a DaemonSet is not available for scheduling.
+	StateUnavailable = "Unavailable"
+	// StateMisscheduled is the state of which a DaemonSet was not able to schedule.
+	StateMisscheduled = "Misscheduled"
+	// StateScheduled is the state of which a DaemonSet was able to schedule.
+	StateScheduled = "Scheduled"
 )
 
 // CollectPods will collect ze metrics for pods.
@@ -73,7 +87,10 @@ func CollectDeployments(deployments []appsv1.Deployment) (*MetricSet, StateSet) 
 	stateSet := make(StateSet)
 	stateSet[KindDeployment] = map[string]int{}
 	for _, deployment := range deployments {
-		if deployment.Status.ReadyReplicas > 0 {
+		if deployment.Spec.Replicas != nil && *deployment.Spec.Replicas == 0 {
+			metrics.Increment(findOwnerKind(deployment.ObjectMeta), deployment.ObjectMeta.Namespace, StateScaledDown)
+			stateSet[KindDeployment][StateScaledDown]++
+		} else if deployment.Status.ReadyReplicas > 0 {
 			metrics.Increment(findOwnerKind(deployment.ObjectMeta), deployment.ObjectMeta.Namespace, StateReady)
 			stateSet[KindDeployment][StateReady]++
 		} else {
@@ -90,7 +107,10 @@ func CollectStatefulSets(statefulsets []appsv1.StatefulSet) (*MetricSet, StateSe
 	stateSet := make(StateSet)
 	stateSet[KindStatefulSet] = map[string]int{}
 	for _, statefulset := range statefulsets {
-		if statefulset.Status.AvailableReplicas > 0 {
+		if statefulset.Spec.Replicas != nil && *statefulset.Spec.Replicas == 0 {
+			metrics.Increment(findOwnerKind(statefulset.ObjectMeta), statefulset.ObjectMeta.Namespace, StateScaledDown)
+			stateSet[KindStatefulSet][StateScaledDown]++
+		} else if statefulset.Status.AvailableReplicas > 0 {
 			metrics.Increment(findOwnerKind(statefulset.ObjectMeta), statefulset.ObjectMeta.Namespace, StateReady)
 			stateSet[KindStatefulSet][StateReady]++
 		} else {
@@ -106,13 +126,47 @@ func CollectReplicaSets(replicasets []appsv1.ReplicaSet) (*MetricSet, StateSet) 
 	metrics := NewMetricSet()
 	stateSet := make(StateSet)
 	stateSet[KindReplicaSet] = map[string]int{}
-	for _, statefulset := range replicasets {
-		if statefulset.Status.AvailableReplicas > 0 {
-			metrics.Increment(findOwnerKind(statefulset.ObjectMeta), statefulset.ObjectMeta.Namespace, StateReady)
+	for _, replicaset := range replicasets {
+		if replicaset.Spec.Replicas != nil && *replicaset.Spec.Replicas == 0 {
+			metrics.Increment(findOwnerKind(replicaset.ObjectMeta), replicaset.ObjectMeta.Namespace, StateScaledDown)
+			stateSet[KindReplicaSet][StateScaledDown]++
+		} else if replicaset.Status.AvailableReplicas > 0 {
+			metrics.Increment(findOwnerKind(replicaset.ObjectMeta), replicaset.ObjectMeta.Namespace, StateReady)
 			stateSet[KindReplicaSet][StateReady]++
 		} else {
-			metrics.Increment(findOwnerKind(statefulset.ObjectMeta), statefulset.ObjectMeta.Namespace, StateNotReady)
+			metrics.Increment(findOwnerKind(replicaset.ObjectMeta), replicaset.ObjectMeta.Namespace, StateNotReady)
 			stateSet[KindReplicaSet][StateNotReady]++
+		}
+	}
+	return metrics, stateSet
+}
+
+// CollectDaemonSets will collect ze metrics for statefulsets.
+func CollectDaemonSets(daemonsets []appsv1.DaemonSet) (*MetricSet, StateSet) {
+	metrics := NewMetricSet()
+	stateSet := make(StateSet)
+	stateSet[KindDaemonSet] = map[string]int{}
+	for _, daemonset := range daemonsets {
+
+		if &daemonset.Status.NumberAvailable != nil {
+			metrics.Increment(findOwnerKind(daemonset.ObjectMeta), daemonset.ObjectMeta.Namespace, StateAvailable)
+			stateSet[KindDaemonSet][StateAvailable] += int(daemonset.Status.NumberAvailable)
+		}
+		if &daemonset.Status.NumberReady != nil {
+			metrics.Increment(findOwnerKind(daemonset.ObjectMeta), daemonset.ObjectMeta.Namespace, StateReady)
+			stateSet[KindDaemonSet][StateReady] += int(daemonset.Status.NumberReady)
+		}
+		if &daemonset.Status.NumberMisscheduled != nil {
+			metrics.Increment(findOwnerKind(daemonset.ObjectMeta), daemonset.ObjectMeta.Namespace, StateMisscheduled)
+			stateSet[KindDaemonSet][StateMisscheduled] += int(daemonset.Status.NumberMisscheduled)
+		}
+		if &daemonset.Status.NumberUnavailable != nil {
+			metrics.Increment(findOwnerKind(daemonset.ObjectMeta), daemonset.ObjectMeta.Namespace, StateUnavailable)
+			stateSet[KindDaemonSet][StateUnavailable] += int(daemonset.Status.NumberUnavailable)
+		}
+		if &daemonset.Status.CurrentNumberScheduled != nil {
+			metrics.Increment(findOwnerKind(daemonset.ObjectMeta), daemonset.ObjectMeta.Namespace, StateScheduled)
+			stateSet[KindDaemonSet][StateScheduled] += int(daemonset.Status.CurrentNumberScheduled)
 		}
 	}
 	return metrics, stateSet
@@ -146,8 +200,8 @@ func CollectJobs(jobs []batchv1.Job) (*MetricSet, StateSet) {
 			stateSet[KindJob][StateFailed]++
 		}
 		if job.Status.Active > 0 {
-			metrics.Increment(findOwnerKind(job.ObjectMeta), job.ObjectMeta.Namespace, StateActive)
-			stateSet[KindJob][StateActive]++
+			metrics.Increment(findOwnerKind(job.ObjectMeta), job.ObjectMeta.Namespace, StateRunning)
+			stateSet[KindJob][StateRunning]++
 		}
 		if job.Status.Succeeded > 0 {
 			metrics.Increment(findOwnerKind(job.ObjectMeta), job.ObjectMeta.Namespace, StateSucceeded)

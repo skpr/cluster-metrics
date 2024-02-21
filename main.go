@@ -108,6 +108,18 @@ func main() {
 				phases = metrics.CombineStates(&phases, &stateSetAddition)
 			}
 			{
+				// Get the daemonsets
+				daemonsets, err := clientset.AppsV1().DaemonSets(namespace.Name).List(context.TODO(), metav1.ListOptions{})
+				if err != nil {
+					panic(err.Error())
+				}
+
+				// Collect the metrics.
+				metricSetAddition, stateSetAddition := metrics.CollectDaemonSets(daemonsets.Items)
+				mts = metrics.CombineRecords(mts, metricSetAddition)
+				phases = metrics.CombineStates(&phases, &stateSetAddition)
+			}
+			{
 				// Get the cronjobs
 				cronjobs, err := clientset.BatchV1().CronJobs(namespace.Name).List(context.TODO(), metav1.ListOptions{})
 				if err != nil {
