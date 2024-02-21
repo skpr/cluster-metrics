@@ -32,16 +32,21 @@ const (
 	// StateSuspended is the const representing the state for a CronJob being Suspended
 	StateSuspended = string(batchv1.JobSuspended)
 	// StateActive is the const representing the state for a CronJob being not Suspended
-	StateActive = string(corev1.PodRunning)
+	StateActive = "Active"
+	// StateRunning is the const representing the state for a Job currently running
+	StateRunning = string(corev1.PodRunning)
 	// StateFailed is the const representing the state for an object having been Failed
 	StateFailed = string(batchv1.JobFailed)
 	// StateSucceeded is the const representing the state for an object having been completed successfully
 	StateSucceeded = string(batchv1.JobComplete)
-
-	StateAvailable    = "Available"
-	StateUnavailable  = "Unavailable"
+	// StateAvailable is the state of which a DaemonSet is available for scheduling.
+	StateAvailable = "Available"
+	// StateUnavailable is the state of which a DaemonSet is not available for scheduling.
+	StateUnavailable = "Unavailable"
+	// StateMisscheduled is the state of which a DaemonSet was not able to schedule.
 	StateMisscheduled = "Misscheduled"
-	StateScheduled    = "Scheduled"
+	// StateScheduled is the state of which a DaemonSet was able to schedule.
+	StateScheduled = "Scheduled"
 )
 
 // CollectPods will collect ze metrics for pods.
@@ -159,6 +164,10 @@ func CollectDaemonSets(daemonsets []appsv1.DaemonSet) (*MetricSet, StateSet) {
 			metrics.Increment(findOwnerKind(daemonset.ObjectMeta), daemonset.ObjectMeta.Namespace, StateUnavailable)
 			stateSet[KindDaemonSet][StateUnavailable] += int(daemonset.Status.NumberUnavailable)
 		}
+		if &daemonset.Status.CurrentNumberScheduled != nil {
+			metrics.Increment(findOwnerKind(daemonset.ObjectMeta), daemonset.ObjectMeta.Namespace, StateScheduled)
+			stateSet[KindDaemonSet][StateScheduled] += int(daemonset.Status.CurrentNumberScheduled)
+		}
 	}
 	return metrics, stateSet
 }
@@ -191,8 +200,8 @@ func CollectJobs(jobs []batchv1.Job) (*MetricSet, StateSet) {
 			stateSet[KindJob][StateFailed]++
 		}
 		if job.Status.Active > 0 {
-			metrics.Increment(findOwnerKind(job.ObjectMeta), job.ObjectMeta.Namespace, StateActive)
-			stateSet[KindJob][StateActive]++
+			metrics.Increment(findOwnerKind(job.ObjectMeta), job.ObjectMeta.Namespace, StateRunning)
+			stateSet[KindJob][StateRunning]++
 		}
 		if job.Status.Succeeded > 0 {
 			metrics.Increment(findOwnerKind(job.ObjectMeta), job.ObjectMeta.Namespace, StateSucceeded)

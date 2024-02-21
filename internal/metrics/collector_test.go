@@ -392,10 +392,10 @@ func TestMetricsCollector_CollectMetrics_CronJobs(t *testing.T) {
 
 	metrics, phaseSet := CollectCronJobs(cronjobs)
 
-	assert.Equal(t, 2, metrics.Items["CronJob-def-Running"].Value)
+	assert.Equal(t, 2, metrics.Items["CronJob-def-Active"].Value)
 	assert.Equal(t, 3, metrics.Items["CronJob-def-Suspended"].Value)
 
-	assert.Equal(t, 2, phaseSet["CronJob"]["Running"])
+	assert.Equal(t, 2, phaseSet["CronJob"]["Active"])
 	assert.Equal(t, 3, phaseSet["CronJob"]["Suspended"])
 
 }
