@@ -293,6 +293,78 @@ func provideTestDeploymentValues() []map[string]string {
 	return vals
 }
 
+func TestMetricsCollector_CollectMetrics_DaemonSets(t *testing.T) {
+
+	values := provideTestDaemonSetValues()
+
+	var daemonsets []appsv1.DaemonSet
+	for _, val := range values {
+
+		daemonset := appsv1.DaemonSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: val["namespace"],
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						Kind: val["kind"],
+					},
+				},
+			},
+			Status: appsv1.DaemonSetStatus{},
+		}
+
+		if val["Misscheduled"] != "" {
+			NumberMisscheduled, err := strconv.ParseInt(val["Misscheduled"], 10, 10)
+			assert.NoError(t, err)
+			daemonset.Status.NumberMisscheduled = int32(NumberMisscheduled)
+		}
+		if val["Ready"] != "" {
+			NumberReady, err := strconv.ParseInt(val["Ready"], 10, 10)
+			assert.NoError(t, err)
+			daemonset.Status.NumberReady = int32(NumberReady)
+		}
+		if val["Available"] != "" {
+			NumberAvailable, err := strconv.ParseInt(val["Available"], 10, 10)
+			assert.NoError(t, err)
+			daemonset.Status.NumberAvailable = int32(NumberAvailable)
+		}
+		if val["Unavailable"] != "" {
+			NumberUnavailable, err := strconv.ParseInt(val["Unavailable"], 10, 10)
+			assert.NoError(t, err)
+			daemonset.Status.NumberUnavailable = int32(NumberUnavailable)
+		}
+
+		daemonsets = append(daemonsets, daemonset)
+	}
+
+	metrics, stateSet := CollectDaemonSets(daemonsets)
+
+	assert.Equal(t, 1, metrics.Items["DaemonSet-abc-Misscheduled"].Value)
+	assert.Equal(t, 1, metrics.Items["DaemonSet-def-Ready"].Value)
+	assert.Equal(t, 1, metrics.Items["DaemonSet-hgi-Available"].Value)
+	assert.Equal(t, 1, metrics.Items["DaemonSet-jkl-Unavailable"].Value)
+
+	assert.Equal(t, 1, metrics.Items["DaemonSet-mno-Misscheduled"].Value)
+	assert.Equal(t, 1, metrics.Items["DaemonSet-mno-Ready"].Value)
+	assert.Equal(t, 1, metrics.Items["DaemonSet-mno-Available"].Value)
+	assert.Equal(t, 1, metrics.Items["DaemonSet-mno-Unavailable"].Value)
+
+	assert.Equal(t, 6, stateSet["DaemonSet"]["Misscheduled"])
+	assert.Equal(t, 12, stateSet["DaemonSet"]["Ready"])
+	assert.Equal(t, 18, stateSet["DaemonSet"]["Available"])
+	assert.Equal(t, 24, stateSet["DaemonSet"]["Unavailable"])
+}
+
+func provideTestDaemonSetValues() []map[string]string {
+	vals := []map[string]string{
+		{"kind": "DaemonSet", "namespace": "abc", "Misscheduled": "3"},
+		{"kind": "DaemonSet", "namespace": "def", "Ready": "6"},
+		{"kind": "DaemonSet", "namespace": "hgi", "Available": "9"},
+		{"kind": "DaemonSet", "namespace": "jkl", "Unavailable": "12"},
+		{"kind": "DaemonSet", "namespace": "mno", "Misscheduled": "3", "Ready": "6", "Available": "9", "Unavailable": "12"},
+	}
+	return vals
+}
+
 func TestMetricsCollector_CollectMetrics_CronJobs(t *testing.T) {
 
 	values := provideTestCronJobsValues()
@@ -320,10 +392,10 @@ func TestMetricsCollector_CollectMetrics_CronJobs(t *testing.T) {
 
 	metrics, phaseSet := CollectCronJobs(cronjobs)
 
-	assert.Equal(t, 2, metrics.Items["CronJob-def-Running"].Value)
+	assert.Equal(t, 2, metrics.Items["CronJob-def-Active"].Value)
 	assert.Equal(t, 3, metrics.Items["CronJob-def-Suspended"].Value)
 
-	assert.Equal(t, 2, phaseSet["CronJob"]["Running"])
+	assert.Equal(t, 2, phaseSet["CronJob"]["Active"])
 	assert.Equal(t, 3, phaseSet["CronJob"]["Suspended"])
 
 }
